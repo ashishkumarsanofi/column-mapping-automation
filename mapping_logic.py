@@ -34,6 +34,7 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             master_value = st.checkbox("Select/Deselect All Columns", value=all_selected, key=master_key)
             # Only update if the user actually toggled the master checkbox
             if master_value != all_selected:
+                # Update all columns' state directly when the checkbox is toggled
                 for col in output_columns:
                     st.session_state[f"{item['label']}_{col}_inc_{idx}"] = master_value
             if item["sheet"]:
@@ -42,10 +43,28 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                 input_df, validation_errors = cached_read_file(item["file"])
             # Strip whitespace from all input DataFrame column names immediately after reading
             input_df.columns = input_df.columns.str.strip()
-            # Check if the first row is empty and adjust column names accordingly
-            if input_df.iloc[0].isnull().all():
-                input_df.columns = input_df.iloc[1]
-                input_df = input_df[2:].reset_index(drop=True)
+            # Option for user to specify the cell (row/col) where column names start
+            col_header_cell = st.text_input(
+                "(Optional) Enter Excel cell (e.g., B4) or row number where column names start:",
+                value="",
+                key=f"{item['label']}_col_header_cell_{idx}"
+            )
+            # If user provides a cell reference or row number, adjust DataFrame accordingly
+            if col_header_cell:
+                import re
+                match = re.match(r"([A-Za-z]+)?(\d+)", col_header_cell.strip())
+                if match:
+                    col_part, row_part = match.groups()
+                    if row_part:
+                        row_idx = int(row_part) - 1  # Excel is 1-based, pandas is 0-based
+                        if 0 <= row_idx < len(input_df):
+                            input_df.columns = input_df.iloc[row_idx]
+                            input_df = input_df[row_idx+1:].reset_index(drop=True)
+            else:
+                # Fallback: if first row is empty, use current logic
+                if input_df.iloc[0].isnull().all():
+                    input_df.columns = input_df.iloc[1]
+                    input_df = input_df[2:].reset_index(drop=True)
             # Only keep columns from input file, not output template
             input_columns = input_df.columns.tolist()
             for col in input_df.columns:
@@ -116,21 +135,23 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                     elif mapped_col not in input_df.columns:
                         st.caption(f"Column '{mapped_col}' not found in input data.")
                     else:
-                        unique_vals = input_df[mapped_col].astype(str).unique().tolist()
-                        if len(unique_vals) < 500:
-                            filter_key = f"{item['label']}_{col}_filter_{idx}"
-                            # Show empty by default, but treat empty as 'all selected' in logic
-                            filter_values = st.multiselect(
-                                "Filter values (optional)",  # Use Unicode hair space to minimize label height
-                                options=unique_vals,
-                                default=[],
-                                key=filter_key
-                            )
-                            # Only filter if user has selected something
-                            if filter_values:
-                                active_filters[mapped_col] = filter_values
+                        # Defensive: Only proceed if mapped_col is a string and in input_df.columns
+                        if isinstance(mapped_col, str) and mapped_col in input_df.columns:
+                            unique_vals = input_df[mapped_col].astype(str).unique().tolist()
+                            if len(unique_vals) < 500:
+                                filter_key = f"{item['label']}_{col}_filter_{idx}"
+                                filter_values = st.multiselect(
+                                    "Filter values (optional)",
+                                    options=unique_vals,
+                                    default=[],
+                                    key=filter_key
+                                )
+                                if filter_values:
+                                    active_filters[mapped_col] = filter_values
+                            else:
+                                st.caption("Too many unique values to filter interactively.")
                         else:
-                            st.caption("Too many unique values to filter interactively.")
+                            st.caption(f"Column '{mapped_col}' not found or invalid in input data.")
                 with cols[5]:
                     show_date_checkbox = ("date" in col.lower() or (mapped_col and mapped_col != "--Select--" and "date" in mapped_col.lower()))
                     if show_date_checkbox:
