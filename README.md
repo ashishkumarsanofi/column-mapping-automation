@@ -63,7 +63,8 @@ pip install -r requirements.txt
 - Changed TXT file encoding from UTF-8 to UTF-16.
 - Added a suggestion to convert Excel files to CSV for faster processing.
 
-
+### Version 1.5
+- Added Cell Reference
 ---
 
 ## 💡 Future Enhancements
