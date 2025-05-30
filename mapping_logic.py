@@ -62,9 +62,15 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             if mapping_df is not None and mapping_file_valid:
                 file_name = item["file"].name
                 sheet_name = item["sheet"] or ""
+                mapping_df['FileName_norm'] = mapping_df['FileName'].fillna("").astype(str).str.strip().str.lower()
                 mapping_df['SheetName_norm'] = mapping_df['SheetName'].fillna("").astype(str).str.strip().str.lower()
+                file_name_norm = str(file_name).strip().lower()
                 sheet_name_norm = str(sheet_name).strip().lower()
-                file_mapping = mapping_df[(mapping_df['FileName'] == file_name) & ((mapping_df['SheetName_norm'] == sheet_name_norm) | (mapping_df['SheetName_norm'].isin(["", "na"]))) ]
+                # Allow mapping to apply to all files if FileName is blank or 'NA', and all sheets if SheetName is blank or 'NA'
+                file_mapping = mapping_df[
+                    ((mapping_df['FileName_norm'] == file_name_norm) | (mapping_df['FileName_norm'].isin(["", "na"]))) &
+                    ((mapping_df['SheetName_norm'] == sheet_name_norm) | (mapping_df['SheetName_norm'].isin(["", "na"])))
+                ]
                 mapping_dict = dict(zip(file_mapping['OutputColumn'], file_mapping['InputColumn']))
             # Header row for mapping UI
             header_cols = st.columns([1, 2, 3, 2, 2.5, 2])
@@ -136,7 +142,7 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                 # Defensive: Only filter if filter_col is in input_df.columns
                 if filter_vals and filter_col in filtered_df.columns:
                     filtered_df = filtered_df[filtered_df[filter_col].astype(str).isin(filter_vals)]
-            final_dataframes.append({"file": item["file"], "label": item["label"], "input_df": filtered_df, "column_mapping": column_mapping, "include_flags": include_flags, "static_values": static_values, "date_format_flags": date_format_flags})
+            final_dataframes.append({"file": item["file"], "label": item["label"], "sheet": item.get("sheet"), "input_df": filtered_df, "column_mapping": column_mapping, "include_flags": include_flags, "static_values": static_values, "date_format_flags": date_format_flags})
     output_filename = st.text_input("📄 Enter Output File Name:", value="final_output", help="This will be the name of your output Excel and TXT files", key="output_file_name")
     return final_dataframes, output_filename
 
@@ -217,17 +223,18 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                 mapping_rows = []
                 for file_data in final_dataframes:
                     file_name = file_data["file"].name
-                    label = file_data["label"]
-                    if " - " in label:
-                        _, sheet_name = label.split(" - ", 1)
-                    else:
+                    # Use the actual sheet value from file_data, which is set in app.py when user selects sheets
+                    sheet_name = file_data.get("sheet", None)
+                    if sheet_name is None:
                         sheet_name = ""
+                    else:
+                        sheet_name = str(sheet_name)
                     for col in output_columns:
                         mapped_col = file_data["column_mapping"].get(col, "")
                         if mapped_col is None:
                             mapped_col = ""
                         mapping_rows.append({"FileName": file_name, "SheetName": sheet_name, "OutputColumn": col, "InputColumn": mapped_col})
-                mapping_export_df = pd.DataFrame(mapping_rows)
+                mapping_export_df = pd.DataFrame(mapping_rows, columns=["FileName", "SheetName", "OutputColumn", "InputColumn"])
                 mapping_csv = mapping_export_df.to_csv(index=False).encode("utf-8")
                 col1, col2 = st.columns([3, 1])
                 with col2:
