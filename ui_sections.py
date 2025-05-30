@@ -18,7 +18,7 @@ def show_upload_section(SANOFI_COLORS):
         type=["csv", "xlsx"],
         key="mapping_file_uploader"
     )
-    st.caption("📦 Max upload size per file: 1GB")
+    # st.caption("📦 Max upload size per file: 1GB")
     return input_files, output_file, mapping_file
 
 def show_footer():

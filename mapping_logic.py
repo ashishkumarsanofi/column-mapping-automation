@@ -42,6 +42,10 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                 input_df, validation_errors = cached_read_file(item["file"])
             # Strip whitespace from all input DataFrame column names immediately after reading
             input_df.columns = input_df.columns.str.strip()
+            # Check if the first row is empty and adjust column names accordingly
+            if input_df.iloc[0].isnull().all():
+                input_df.columns = input_df.iloc[1]
+                input_df = input_df[2:].reset_index(drop=True)
             # Only keep columns from input file, not output template
             input_columns = input_df.columns.tolist()
             for col in input_df.columns:
@@ -219,6 +223,7 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                 header_line = "|".join(combined_df_txt.columns)
                 txt_lines = combined_df_txt.astype(str).apply(lambda row: "|".join(escape_pipes(v) for v in row.values), axis=1)
                 txt_content = "\n".join([header_line] + txt_lines.to_list())
+                txt_content = txt_content.encode("utf-16")
                 st.download_button(label="📝 Download as TXT (pipe-concat)", data=txt_content, file_name=f"{output_filename}.txt", mime="text/plain")
                 mapping_rows = []
                 for file_data in final_dataframes:
