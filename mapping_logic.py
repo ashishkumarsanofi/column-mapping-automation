@@ -111,11 +111,10 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                             filter_key = f"{item['label']}_{col}_filter_{idx}"
                             # Show empty by default, but treat empty as 'all selected' in logic
                             filter_values = st.multiselect(
-                                "Filter values (optional)",
+                                "Filter values (optional)",  # Use Unicode hair space to minimize label height
                                 options=unique_vals,
                                 default=[],
-                                key=filter_key,
-                                help="Select values to include in the output. Leave empty for all values.",
+                                key=filter_key
                             )
                             # Only filter if user has selected something
                             if filter_values:
@@ -237,3 +236,12 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                 st.dataframe(combined_df.head(10))
                 st.markdown(f"<div class='success-message'>Processed <b>{len(final_dataframes)}</b> files/sheets, final output has <b>{combined_df.shape[0]}</b> rows and <b>{combined_df.shape[1]}</b> columns.</div>", unsafe_allow_html=True)
                 return combined_df
+
+    # Add custom CSS to align the multiselect with other widgets
+    st.markdown("""
+        <style>
+        /* Reduce the top margin and padding for the multiselect filter */
+        div[data-baseweb='select'] > div { min-height: 38px !important; }
+        div[data-baseweb='select'] { margin-top: -6px !important; }
+        </style>
+    """, unsafe_allow_html=True)
