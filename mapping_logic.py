@@ -2,6 +2,19 @@ import pandas as pd
 import streamlit as st
 from file_utils import read_file, fill_missing_columns
 
+def deduplicate_columns(columns):
+    counts = {}
+    new_cols = []
+    for col in columns:
+        col_str = str(col)
+        if col_str in counts:
+            counts[col_str] += 1
+            new_cols.append(f"{col_str}_{counts[col_str]}")
+        else:
+            counts[col_str] = 0
+            new_cols.append(col_str)
+    return new_cols
+
 def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_file_valid, mapping_df, output_columns):
     """
     Handles the mapping UI and logic for each file/sheet tab. Returns final_dataframes and output_filename.
@@ -45,25 +58,31 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             input_df.columns = input_df.columns.str.strip()
             # Option for user to specify the cell (row/col) where column names start
             col_header_cell = st.text_input(
-                "(Optional) Enter Excel cell (e.g., B4) or row number where column names start:",
+                "(Optional) Enter row number where column names start (e.g., 4):",
                 value="",
                 key=f"{item['label']}_col_header_cell_{idx}"
             )
             # If user provides a cell reference or row number, adjust DataFrame accordingly
             if col_header_cell:
                 import re
-                match = re.match(r"([A-Za-z]+)?(\d+)", col_header_cell.strip())
+                match = re.match(r"(\d+)", col_header_cell.strip())
                 if match:
-                    col_part, row_part = match.groups()
-                    if row_part:
-                        row_idx = int(row_part) - 1  # Excel is 1-based, pandas is 0-based
-                        if 0 <= row_idx < len(input_df):
-                            input_df.columns = input_df.iloc[row_idx]
+                    row_part = match.group(1)
+                    row_idx = int(row_part) - 1  # Excel is 1-based, pandas is 0-based
+                    if 0 <= row_idx < len(input_df):
+                        if input_df.iloc[row_idx].isnull().all():
+                            st.warning(f"Row {row_part} is all empty/NaN. Please check your file.")
+                        else:
+                            input_df.columns = deduplicate_columns(input_df.iloc[row_idx])
                             input_df = input_df[row_idx+1:].reset_index(drop=True)
+                    else:
+                        st.warning(f"Row {row_part} is out of bounds for this file.")
+                else:
+                    st.warning("Invalid row number. Please enter a valid integer (e.g., 4). Only row number is supported.")
             else:
                 # Fallback: if first row is empty, use current logic
                 if input_df.iloc[0].isnull().all():
-                    input_df.columns = input_df.iloc[1]
+                    input_df.columns = deduplicate_columns(input_df.iloc[1])
                     input_df = input_df[2:].reset_index(drop=True)
             # Only keep columns from input file, not output template
             input_columns = input_df.columns.tolist()
