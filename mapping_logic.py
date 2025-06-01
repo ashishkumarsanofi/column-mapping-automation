@@ -1,8 +1,23 @@
+"""
+mapping_logic.py
+
+Contains the main logic for mapping, processing, and exporting data using Streamlit UI.
+"""
+
 import pandas as pd
 import streamlit as st
 from file_utils import read_file, fill_missing_columns
 
+# Utility: Deduplicate columns
+
 def deduplicate_columns(columns):
+    """
+    Ensures column names are unique by appending a suffix to duplicates.
+    Args:
+        columns (list): List of column names.
+    Returns:
+        list: List of unique column names.
+    """
     counts = {}
     new_cols = []
     for col in columns:
@@ -15,10 +30,21 @@ def deduplicate_columns(columns):
             new_cols.append(col_str)
     return new_cols
 
+# Main function: Handles mapping UI and logic
+
 def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_file_valid, mapping_df, output_columns):
     """
     Handles the mapping UI and logic for each file/sheet tab. Returns final_dataframes and output_filename.
     Optimized for speed: uses Streamlit caching for file reads and DataFrame operations.
+    Args:
+        input_file_sheets (list): List of dicts with file/sheet info.
+        output_file: Output template file object.
+        mapping_file: Optional mapping file object.
+        mapping_file_valid (bool): Whether mapping file is valid.
+        mapping_df (pd.DataFrame): Mapping DataFrame.
+        output_columns (list): List of output column names.
+    Returns:
+        tuple: (final_dataframes, output_filename)
     """
     @st.cache_data(show_spinner=False, max_entries=20)
     def cached_read_file(file):
@@ -191,6 +217,15 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
     return final_dataframes, output_filename
 
 def process_final_output(final_dataframes, output_columns, output_filename):
+    """
+    Processes the final output by consolidating mapped dataframes, handling errors, and providing download options.
+    Args:
+        final_dataframes (list): List of dicts with processed data for each file/sheet.
+        output_columns (list): List of output column names.
+        output_filename (str): Name for the output file.
+    Returns:
+        pd.DataFrame or None: The final combined DataFrame, or None if errors exist.
+    """
     import io, warnings
     import pandas as pd
     st.markdown("---")

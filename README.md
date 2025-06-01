@@ -38,6 +38,19 @@ Welcome to the **Advanced Column Mapping & Transformation Tool**! This tool is d
 
 ---
 
+## 📁 Project Structure
+
+- `app.py`: Main entry point for the Streamlit app. Coordinates file uploads, mapping, and output generation.
+- `file_utils.py`: Utility functions for reading files and ensuring required columns are present.
+- `mapping_logic.py`: Main logic for mapping, processing, and exporting data using Streamlit UI.
+- `ui_sections.py`: Streamlit UI components for file upload, footer, and user guide sections.
+- `requirements.txt`: Python dependencies for the project.
+- `README.md`: Project documentation and usage instructions.
+
+> **Note:** `__pycache__/` contains Python cache files and can be ignored.
+
+---
+
 ## 🛠️ Requirements
 
 - Python 3.10+

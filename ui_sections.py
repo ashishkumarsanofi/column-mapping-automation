@@ -1,6 +1,19 @@
+"""
+ui_sections.py
+
+Streamlit UI components for file upload, footer, and user guide sections.
+"""
+
 import streamlit as st
 
 def show_upload_section(SANOFI_COLORS):
+    """
+    Renders the file upload section in the Streamlit UI.
+    Args:
+        SANOFI_COLORS (dict): Color palette for UI styling.
+    Returns:
+        tuple: (input_files, output_file, mapping_file)
+    """
     st.markdown(f'<h2 style="color: {SANOFI_COLORS["secondary"]};">1. Upload Files</h2>', unsafe_allow_html=True)
     input_files = st.file_uploader(
         "Upload One or More Input Files (CSV or Excel)", 
@@ -22,6 +35,9 @@ def show_upload_section(SANOFI_COLORS):
     return input_files, output_file, mapping_file
 
 def show_footer():
+    """
+    Renders the custom footer in the Streamlit UI.
+    """
     st.markdown("""
     <style>
     .footer-ashish {color: rgba(180,180,180,0.35); background: transparent; text-align: right; font-size: 0.72rem; padding: 0 8px 2px 0; margin-top: 10px; margin-bottom: 2px; user-select: none; letter-spacing: 0.01em;}
@@ -30,6 +46,9 @@ def show_footer():
     """, unsafe_allow_html=True)
 
 def show_guide():
+    """
+    Renders the step-by-step user guide in an expandable section.
+    """
     with st.expander("📖 How to Use This Tool - Click to Expand"):
         st.markdown("""
         ### Step-by-Step Guide

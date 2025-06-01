@@ -1,3 +1,10 @@
+"""
+app.py
+
+Main entry point for the Streamlit Column Mapping & Transformation Tool.
+Coordinates file uploads, sheet selection, mapping, and output generation.
+"""
+
 import os
 import streamlit as st
 import pandas as pd
