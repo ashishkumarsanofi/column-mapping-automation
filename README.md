@@ -65,6 +65,9 @@ pip install -r requirements.txt
 
 ### Version 1.5
 - Added Cell Reference
+
+### Version 1.5.1
+- Fixed duplicate column names in same row
 ---
 
 ## 💡 Future Enhancements
