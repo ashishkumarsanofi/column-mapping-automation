@@ -81,6 +81,9 @@ pip install -r requirements.txt
 
 ### Version 1.5.1
 - Fixed duplicate column names in same row
+
+### Version 1.6
+- Whitespace is now stripped from all column names before deduplication. This ensures that columns like 'fruit ' and 'fruit' are treated as the same column, and mapping to duplicate columns (e.g., 'fruit', 'fruit_1') works robustly even if there are extra spaces in the Excel file. This fixes mapping and filter issues for columns with trailing or leading spaces.
 ---
 
 ## 💡 Future Enhancements
