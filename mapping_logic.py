@@ -279,13 +279,17 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                 for col in output_columns:
                     if include_flags[col]:
                         mapped_col = column_mapping[col].strip() if column_mapping[col] else column_mapping[col]
+                        static_val = static_values[col]
+                        # If user did not select anything (i.e., mapped_col is None, '', '--Select--', and no static value)
+                        if mapped_col in [None, '', '--Select--'] and not static_val:
+                            all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is included but not mapped to any input column and has no static value.")
+                            df_output[col] = [""] * len(input_df)
+                            continue
                         # Treat both None, empty string, and '--Blank--' as blank columns
                         if mapped_col in [None, '', '--Blank--']:
                             df_output[col] = [""] * len(input_df)
                             continue  # Skip further checks if blank
-                        if not mapped_col and not static_values[col]:
-                            all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is included but not mapped to any input column and has no static value.")
-                        elif mapped_col and static_values[col]:
+                        if mapped_col and static_val:
                             all_mapping_errors.append(f"⚠️ <b>{col}</b> in <b>{file_data['label']}</b> has both a mapping and a static value. Please provide only one.")
                         elif mapped_col:
                             if mapped_col in input_df.columns:
@@ -293,8 +297,8 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                             else:
                                 all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is mapped to '<b>{mapped_col}</b>', which does not exist in the input data.")
                                 df_output[col] = ""
-                        elif static_values[col]:
-                            df_output[col] = static_values[col]
+                        elif static_val:
+                            df_output[col] = static_val
                         else:
                             df_output[col] = ""
                 df_output = fill_missing_columns(df_output, [col for col in output_columns if include_flags[col]])
