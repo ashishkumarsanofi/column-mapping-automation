@@ -193,20 +193,24 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                     mapped_col_original = mapped_col  # Save for UI display
                     if mapped_col:
                         mapped_col = mapped_col.strip()
-                    col_occurrences_stripped = {k.strip(): [c.strip() for c in v] for k, v in col_occurrences.items()}
-                    input_columns_stripped = [c.strip() for c in input_columns]
-                    if mapped_col and mapped_col not in input_columns_stripped:
-                        import re
-                        match = re.match(r"^(.*?)(?:_(\d+))?$", mapped_col)
-                        if match:
-                            base_name = match.group(1).strip()
-                            idx_num = int(match.group(2)) if match.group(2) is not None else 0
-                            if base_name in col_occurrences_stripped and len(col_occurrences_stripped[base_name]) > idx_num:
-                                mapped_col = col_occurrences_stripped[base_name][idx_num]
-                            else:
-                                mapped_col = None
+                    # --- FIX: If user selects '--Blank--', preserve it exactly ---
+                    if mapped_col == "--Blank--":
+                        pass  # Do not change mapped_col if it's --Blank--
+                    else:
+                        col_occurrences_stripped = {k.strip(): [c.strip() for c in v] for k, v in col_occurrences.items()}
+                        input_columns_stripped = [c.strip() for c in input_columns]
+                        if mapped_col and mapped_col not in input_columns_stripped:
+                            import re
+                            match = re.match(r"^(.*?)(?:_(\d+))?$", mapped_col)
+                            if match:
+                                base_name = match.group(1).strip()
+                                idx_num = int(match.group(2)) if match.group(2) is not None else 0
+                                if base_name in col_occurrences_stripped and len(col_occurrences_stripped[base_name]) > idx_num:
+                                    mapped_col = col_occurrences_stripped[base_name][idx_num]
+                                else:
+                                    mapped_col = None
                     # Defensive: If mapped_col is not in input_columns and not --Blank--, set mapped_col to None
-                    if mapped_col not in input_columns_stripped and mapped_col != "--Blank--":
+                    if mapped_col not in input_columns and mapped_col != "--Blank--":
                         mapped_col = None
                 with cols[3]:
                     static_val = st.text_input("Static Value", static_values[col], key=f"{item['label']}_{col}_static_{idx}", label_visibility="collapsed")
@@ -280,27 +284,35 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                     if include_flags[col]:
                         mapped_col = column_mapping[col].strip() if column_mapping[col] else column_mapping[col]
                         static_val = static_values[col]
-                        # If user did not select anything (i.e., mapped_col is None, '', '--Select--', and no static value)
+
+                        # 1. If mapped_col is None, '', or '--Select--' and no static value: error
                         if mapped_col in [None, '', '--Select--'] and not static_val:
                             all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is included but not mapped to any input column and has no static value.")
                             df_output[col] = [""] * len(input_df)
                             continue
-                        # Treat both None, empty string, and '--Blank--' as blank columns
-                        if mapped_col in [None, '', '--Blank--']:
+                        # 2. If mapped_col is None, '', or '--Select--' and static value: fill with static value
+                        if mapped_col in [None, '', '--Select--'] and static_val:
+                            df_output[col] = [static_val] * len(input_df)
+                            continue
+                        # 3. If mapped_col is '--Blank--' and no static value: fill with empty
+                        if mapped_col == '--Blank--' and not static_val:
                             df_output[col] = [""] * len(input_df)
-                            continue  # Skip further checks if blank
-                        if mapped_col and static_val:
+                            continue
+                        # 4. If mapped_col is '--Blank--' and static value: error
+                        if mapped_col == '--Blank--' and static_val:
                             all_mapping_errors.append(f"⚠️ <b>{col}</b> in <b>{file_data['label']}</b> has both a mapping and a static value. Please provide only one.")
-                        elif mapped_col:
-                            if mapped_col in input_df.columns:
-                                df_output[col] = input_df[mapped_col].values
-                            else:
-                                all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is mapped to '<b>{mapped_col}</b>', which does not exist in the input data.")
-                                df_output[col] = ""
-                        elif static_val:
-                            df_output[col] = static_val
+                            df_output[col] = [""] * len(input_df)
+                            continue
+                        # 5. Normal mapping: mapped_col is a real column name, no static value
+                        if static_val and mapped_col not in [None, '', '--Select--', '--Blank--']:
+                            all_mapping_errors.append(f"⚠️ <b>{col}</b> in <b>{file_data['label']}</b> has both a mapping to '<b>{mapped_col}</b>' and a static value. Please provide only one.")
+                            df_output[col] = [""] * len(input_df)
+                        elif mapped_col in input_df.columns:
+                            df_output[col] = input_df[mapped_col].values
                         else:
-                            df_output[col] = ""
+                            all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is mapped to '<b>{mapped_col}</b>', which does not exist in the input data.")
+                            df_output[col] = [""] * len(input_df)
+                        # The loop will continue to the next 'col' after this block.
                 df_output = fill_missing_columns(df_output, [col for col in output_columns if include_flags[col]])
                 combined_df_list.append(df_output)
             if all_mapping_errors:

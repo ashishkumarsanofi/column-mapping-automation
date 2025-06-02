@@ -86,6 +86,28 @@ pip install -r requirements.txt
 - Whitespace is now stripped from all column names before deduplication. This ensures that columns like 'fruit ' and 'fruit' are treated as the same column, and mapping to duplicate columns (e.g., 'fruit', 'fruit_1') works robustly even if there are extra spaces in the Excel file. This fixes mapping and filter issues for columns with trailing or leading spaces.
 ---
 
+## 🚦 Limits & Recommendations
+
+- **Number of Input Files:**
+  - There is no hard-coded limit on the number of input files you can upload. However, uploading a very large number of files (e.g., dozens or more) may slow down the app or hit browser/memory limits, depending on your system resources.
+
+- **Excel Sheets per File:**
+  - You can select and process any number of sheets from each Excel file. There is no explicit limit, but performance may degrade with very large or complex workbooks.
+
+- **File Size Limit:**
+  - Streamlit's default file uploader supports files up to 200MB. For best performance, keep individual files under 50MB. Large files may cause slow uploads, memory errors, or browser crashes.
+  - You can increase the file size limit by setting `server.maxUploadSize` in your `.streamlit/config.toml` (see Streamlit documentation).
+
+- **Recommended Data Size:**
+  - For smooth operation, keep total data (all files combined) under 100,000 rows. Larger datasets may work but could be slow or unstable, depending on your hardware.
+
+- **Other Notes:**
+  - Only Excel (`.xlsx`) and CSV files are supported as input.
+  - Avoid using files with extremely wide tables (hundreds of columns), as UI and memory issues may occur.
+  - If you encounter performance issues, try splitting your data into smaller files or converting Excel to CSV for faster processing.
+
+---
+
 ## 💡 Future Enhancements
 
 - Add support for additional file formats (e.g., JSON, XML).
