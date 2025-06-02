@@ -1,3 +1,10 @@
+"""
+app.py
+
+Main entry point for the Streamlit Column Mapping & Transformation Tool.
+Coordinates file uploads, sheet selection, mapping, and output generation.
+"""
+
 import os
 import streamlit as st
 import pandas as pd
@@ -43,6 +50,7 @@ show_guide()
 st.info("💡 Tip: Convert Excel files to CSV format for faster processing before uploading.")
 # --- Upload Section ---
 input_files, output_file, mapping_file = show_upload_section(SANOFI_COLORS)
+print("upload-done")  # Step marker
 
 # --- Sheet selection logic (keep in app.py for now for clarity) ---
 input_file_sheets = []
@@ -64,6 +72,7 @@ if input_files:
                 st.error(f"Could not read sheets from {file.name}: {e}")
         else:
             input_file_sheets.append({"file": file, "sheet": None, "label": file.name})
+print("sheet-done")  # Step marker
 
 if input_file_sheets and output_file:
     output_df, _ = read_file(output_file)
@@ -84,7 +93,9 @@ if input_file_sheets and output_file:
         final_dataframes, output_filename = process_mapping_tabs(
             input_file_sheets, output_file, mapping_file, mapping_file_valid, mapping_df, output_columns
         )
+        print("mapping-done")  # Step marker
         process_final_output(final_dataframes, output_columns, output_filename)
+        print("output-done")  # Step marker
     else:
         if mapping_file and not mapping_file_valid:
             st.info("❌ Please upload a valid mapping file before proceeding.")

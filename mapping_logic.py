@@ -1,8 +1,23 @@
+"""
+mapping_logic.py
+
+Contains the main logic for mapping, processing, and exporting data using Streamlit UI.
+"""
+
 import pandas as pd
 import streamlit as st
 from file_utils import read_file, fill_missing_columns
 
+# Utility: Deduplicate columns
+
 def deduplicate_columns(columns):
+    """
+    Ensures column names are unique by appending a suffix to duplicates.
+    Args:
+        columns (list): List of column names.
+    Returns:
+        list: List of unique column names.
+    """
     counts = {}
     new_cols = []
     for col in columns:
@@ -15,10 +30,21 @@ def deduplicate_columns(columns):
             new_cols.append(col_str)
     return new_cols
 
+# Main function: Handles mapping UI and logic
+
 def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_file_valid, mapping_df, output_columns):
     """
     Handles the mapping UI and logic for each file/sheet tab. Returns final_dataframes and output_filename.
     Optimized for speed: uses Streamlit caching for file reads and DataFrame operations.
+    Args:
+        input_file_sheets (list): List of dicts with file/sheet info.
+        output_file: Output template file object.
+        mapping_file: Optional mapping file object.
+        mapping_file_valid (bool): Whether mapping file is valid.
+        mapping_df (pd.DataFrame): Mapping DataFrame.
+        output_columns (list): List of output column names.
+    Returns:
+        tuple: (final_dataframes, output_filename)
     """
     @st.cache_data(show_spinner=False, max_entries=20)
     def cached_read_file(file):
@@ -54,7 +80,7 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                 input_df = cached_read_excel(item["file"], item["sheet"], None)  # Read all columns
             else:
                 input_df, validation_errors = cached_read_file(item["file"])
-            # Strip whitespace from all input DataFrame column names immediately after reading
+            # --- STRIP WHITESPACE BEFORE DEDUPLICATION ---
             input_df.columns = input_df.columns.str.strip()
             # Option for user to specify the cell (row/col) where column names start
             col_header_cell = st.text_input(
@@ -73,7 +99,9 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                         if input_df.iloc[row_idx].isnull().all():
                             st.warning(f"Row {row_part} is all empty/NaN. Please check your file.")
                         else:
-                            input_df.columns = deduplicate_columns(input_df.iloc[row_idx])
+                            # STRIP WHITESPACE BEFORE DEDUPLICATION
+                            input_df.columns = input_df.iloc[row_idx].astype(str).str.strip()
+                            input_df.columns = deduplicate_columns(input_df.columns)
                             input_df = input_df[row_idx+1:].reset_index(drop=True)
                     else:
                         st.warning(f"Row {row_part} is out of bounds for this file.")
@@ -82,10 +110,29 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             else:
                 # Fallback: if first row is empty, use current logic
                 if input_df.iloc[0].isnull().all():
-                    input_df.columns = deduplicate_columns(input_df.iloc[1])
+                    # STRIP WHITESPACE BEFORE DEDUPLICATION
+                    input_df.columns = input_df.iloc[1].astype(str).str.strip()
+                    input_df.columns = deduplicate_columns(input_df.columns)
                     input_df = input_df[2:].reset_index(drop=True)
             # Only keep columns from input file, not output template
             input_columns = input_df.columns.tolist()
+            # Build a mapping of base column names to their occurrences (for deduplication)
+            col_occurrences = {}
+            for idx_col, col in enumerate(input_columns):
+                base = str(col)
+                if '_' in base and base.rsplit('_', 1)[-1].isdigit():
+                    base_name = '_'.join(base.split('_')[:-1])
+                else:
+                    base_name = base
+                col_occurrences.setdefault(base_name, []).append(col)
+            # Add logging to verify col_occurrences and mapping logic
+            import logging
+            logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+            # Log col_occurrences after it is populated
+            logging.debug(f"col_occurrences: {col_occurrences}")
+            # Add detailed logging to debug mapping logic
+            logging.debug(f"Input columns (deduplicated): {input_columns}")
+            logging.debug(f"col_occurrences: {col_occurrences}")
             for col in input_df.columns:
                 col_str = str(col)
                 if "date" in col_str.lower():
@@ -142,13 +189,33 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                     if default_map not in mapping_options and isinstance(default_map, str):
                         default_map = default_map.strip()
                     mapped_col = st.selectbox("Map to Input Column", mapping_options, index=mapping_options.index(default_map) if default_map in mapping_options else 0, key=f"{item['label']}_{col}_map_{idx}", label_visibility="collapsed")
+                    # --- FIXED LOGIC: Robust to whitespace and matches deduplicated columns ---
+                    mapped_col_original = mapped_col  # Save for UI display
+                    if mapped_col:
+                        mapped_col = mapped_col.strip()
+                    # --- FIX: If user selects '--Blank--', preserve it exactly ---
+                    if mapped_col == "--Blank--":
+                        pass  # Do not change mapped_col if it's --Blank--
+                    else:
+                        col_occurrences_stripped = {k.strip(): [c.strip() for c in v] for k, v in col_occurrences.items()}
+                        input_columns_stripped = [c.strip() for c in input_columns]
+                        if mapped_col and mapped_col not in input_columns_stripped:
+                            import re
+                            match = re.match(r"^(.*?)(?:_(\d+))?$", mapped_col)
+                            if match:
+                                base_name = match.group(1).strip()
+                                idx_num = int(match.group(2)) if match.group(2) is not None else 0
+                                if base_name in col_occurrences_stripped and len(col_occurrences_stripped[base_name]) > idx_num:
+                                    mapped_col = col_occurrences_stripped[base_name][idx_num]
+                                else:
+                                    mapped_col = None
                     # Defensive: If mapped_col is not in input_columns and not --Blank--, set mapped_col to None
                     if mapped_col not in input_columns and mapped_col != "--Blank--":
                         mapped_col = None
                 with cols[3]:
                     static_val = st.text_input("Static Value", static_values[col], key=f"{item['label']}_{col}_static_{idx}", label_visibility="collapsed")
                 with cols[4]:
-                    # Simple filter section: all values selected by default, but UI appears empty
+                    # Use the resolved mapped_col for filter UI and checks
                     if mapped_col in ("--Select--", "--Blank--") or not mapped_col:
                         st.caption("Select an input column to enable filtering.")
                     elif mapped_col not in input_df.columns:
@@ -191,6 +258,15 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
     return final_dataframes, output_filename
 
 def process_final_output(final_dataframes, output_columns, output_filename):
+    """
+    Processes the final output by consolidating mapped dataframes, handling errors, and providing download options.
+    Args:
+        final_dataframes (list): List of dicts with processed data for each file/sheet.
+        output_columns (list): List of output column names.
+        output_filename (str): Name for the output file.
+    Returns:
+        pd.DataFrame or None: The final combined DataFrame, or None if errors exist.
+    """
     import io, warnings
     import pandas as pd
     st.markdown("---")
@@ -207,24 +283,36 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                 for col in output_columns:
                     if include_flags[col]:
                         mapped_col = column_mapping[col].strip() if column_mapping[col] else column_mapping[col]
-                        # Defensive: Only use mapped_col if it exists in input_df.columns
-                        if mapped_col == "--Blank--":
-                            df_output[col] = [""] * len(input_df)
-                            continue  # Skip further checks if --Blank-- is selected
-                        if not mapped_col and not static_values[col]:
+                        static_val = static_values[col]
+
+                        # 1. If mapped_col is None, '', or '--Select--' and no static value: error
+                        if mapped_col in [None, '', '--Select--'] and not static_val:
                             all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is included but not mapped to any input column and has no static value.")
-                        elif mapped_col and static_values[col]:
+                            df_output[col] = [""] * len(input_df)
+                            continue
+                        # 2. If mapped_col is None, '', or '--Select--' and static value: fill with static value
+                        if mapped_col in [None, '', '--Select--'] and static_val:
+                            df_output[col] = [static_val] * len(input_df)
+                            continue
+                        # 3. If mapped_col is '--Blank--' and no static value: fill with empty
+                        if mapped_col == '--Blank--' and not static_val:
+                            df_output[col] = [""] * len(input_df)
+                            continue
+                        # 4. If mapped_col is '--Blank--' and static value: error
+                        if mapped_col == '--Blank--' and static_val:
                             all_mapping_errors.append(f"⚠️ <b>{col}</b> in <b>{file_data['label']}</b> has both a mapping and a static value. Please provide only one.")
-                        elif mapped_col:
-                            if mapped_col in input_df.columns:
-                                df_output[col] = input_df[mapped_col].values
-                            else:
-                                all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is mapped to '<b>{mapped_col}</b>', which does not exist in the input data.")
-                                df_output[col] = ""
-                        elif static_values[col]:
-                            df_output[col] = static_values[col]
+                            df_output[col] = [""] * len(input_df)
+                            continue
+                        # 5. Normal mapping: mapped_col is a real column name, no static value
+                        if static_val and mapped_col not in [None, '', '--Select--', '--Blank--']:
+                            all_mapping_errors.append(f"⚠️ <b>{col}</b> in <b>{file_data['label']}</b> has both a mapping to '<b>{mapped_col}</b>' and a static value. Please provide only one.")
+                            df_output[col] = [""] * len(input_df)
+                        elif mapped_col in input_df.columns:
+                            df_output[col] = input_df[mapped_col].values
                         else:
-                            df_output[col] = ""
+                            all_mapping_errors.append(f"❌ <b>{col}</b> in <b>{file_data['label']}</b> is mapped to '<b>{mapped_col}</b>', which does not exist in the input data.")
+                            df_output[col] = [""] * len(input_df)
+                        # The loop will continue to the next 'col' after this block.
                 df_output = fill_missing_columns(df_output, [col for col in output_columns if include_flags[col]])
                 combined_df_list.append(df_output)
             if all_mapping_errors:
