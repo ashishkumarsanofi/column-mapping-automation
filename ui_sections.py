@@ -61,7 +61,7 @@ def show_guide():
             - `FileName`: Name of your input file (e.g., `data.xlsx`, `input.csv`)
             - `SheetName`: Sheet name for Excel files (e.g., `Sheet1`). Leave blank or write `NA` for CSV files.
             - `OutputColumn`: Column name from output template
-            - `InputColumn`: Corresponding column name in input file or sheet`
+            - `InputColumn`: Corresponding column name in input file or sheet
                     
             **Enhanced Format (Additional Optional Columns):**
             - `StaticValue`: Fixed value to use instead of mapping from input (leave blank if mapping)
