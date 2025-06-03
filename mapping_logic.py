@@ -133,15 +133,7 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             # Add detailed logging to debug mapping logic
             logging.debug(f"Input columns (deduplicated): {input_columns}")
             logging.debug(f"col_occurrences: {col_occurrences}")
-            for col in input_df.columns:
-                col_str = str(col)
-                if "date" in col_str.lower():
-                    try:
-                        parsed = pd.to_datetime(input_df[col], errors='coerce', dayfirst=False)
-                        if parsed.notna().sum() > len(input_df) // 2:
-                            input_df[col] = parsed.dt.strftime('%Y-%m-%d')
-                    except Exception:
-                        pass
+            # Removed automatic date formatting - user controls this with checkboxes
             column_mapping = {col: None for col in output_columns}
             include_flags = {col: True for col in output_columns}
             static_values = {col: "" for col in output_columns}
@@ -324,8 +316,20 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                 return None
             else:
                 combined_df = pd.concat(combined_df_list, ignore_index=True)
+                
+                # Create a consolidated date format flags dictionary from all files
+                consolidated_date_flags = {}
+                for file_data in final_dataframes:
+                    for col, flag in file_data["date_format_flags"].items():
+                        # If any file has date formatting enabled for this column, enable it
+                        if flag:
+                            consolidated_date_flags[col] = True
+                        elif col not in consolidated_date_flags:
+                            consolidated_date_flags[col] = False
+                
+                # Apply date formatting only if user checked the checkbox
                 for col in combined_df.columns:
-                    if file_data["date_format_flags"].get(col, False):
+                    if consolidated_date_flags.get(col, False):
                         with warnings.catch_warnings():
                             warnings.simplefilter("ignore", UserWarning)
                             try:

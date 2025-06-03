@@ -84,6 +84,12 @@ pip install -r requirements.txt
 
 ### Version 1.6
 - Whitespace is now stripped from all column names before deduplication. This ensures that columns like 'fruit ' and 'fruit' are treated as the same column, and mapping to duplicate columns (e.g., 'fruit', 'fruit_1') works robustly even if there are extra spaces in the Excel file. This fixes mapping and filter issues for columns with trailing or leading spaces.
+
+### Version 1.7
+- **Fixed Date Formatting Bug**: Resolved issue where date formatting checkbox was not working properly. Previously, columns with "date" in their names were automatically formatted to `yyyy-mm-dd` regardless of user selection.
+- **Improved User Control**: Date formatting now properly respects user checkbox selections - dates are only formatted when explicitly checked by the user.
+- **Multi-file Date Handling**: Fixed date format flag logic to properly consolidate date formatting preferences across multiple input files.
+- **Enhanced Reliability**: Removed automatic date formatting override that was ignoring user preferences, giving users full control over date column formatting.
 ---
 
 ## 🚦 Limits & Recommendations
