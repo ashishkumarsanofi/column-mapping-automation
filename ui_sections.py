@@ -51,28 +51,44 @@ def show_guide():
     """
     with st.expander("📖 How to Use This Tool - Click to Expand"):
         st.markdown("""
-        ### Step-by-Step Guide
-
+        ### Step-by-Step Guide 
         #### 1. Prepare Your Files
         - **Input Files**: Prepare one or more CSV/Excel files that contain your source data.
         - **Output Template**: Create a template file with your desired output column structure.
         - **Optional Mapping File**: If you have a pre-defined mapping, prepare a CSV/Excel with columns:
+            
+            **Basic Format (Required Columns):**
             - `FileName`: Name of your input file (e.g., `data.xlsx`, `input.csv`)
             - `SheetName`: Sheet name for Excel files (e.g., `Sheet1`). Leave blank or write `NA` for CSV files.
             - `OutputColumn`: Column name from output template
-            - `InputColumn`: Corresponding column name in input file or sheet
+            - `InputColumn`: Corresponding column name in input file or sheet`
+                    
+            **Enhanced Format (Additional Optional Columns):**
+            - `StaticValue`: Fixed value to use instead of mapping from input (leave blank if mapping)
+            - `FilterValues`: Comma-separated values to filter input data by (e.g., "A,B,Premium")
+            - `DateFormatFlag`: `True` to format as yyyy-mm-dd, `False` otherwise
+            - `IncludeFlag`: `True` to include column in output, `False` to exclude
 
-          **Example:**
+          **Basic Example:**
           | FileName   | SheetName | OutputColumn | InputColumn |
           |------------|-----------|--------------|-------------|
           | data.xlsx  | Sheet1    | Name         | Full Name   |
           | data.xlsx  | Sheet2    | Age          | Years       |
           | input.csv  |           | Name         | Name        |
-          | input.csv  | NA        | Age          | Age         |
 
-        > **📝 Tip:**  
-        > If you want a mapping to apply to all sheets in a file, leave `SheetName` blank or `"NA"`.  
-        > If you want a mapping to apply to a specific sheet, fill in the `SheetName`.
+          **Enhanced Example:**
+          | FileName   | SheetName | OutputColumn | InputColumn | StaticValue | FilterValues | DateFormatFlag | IncludeFlag |
+          |------------|-----------|--------------|-------------|-------------|--------------|----------------|-------------|
+          | data.xlsx  | Sheet1    | Name         | Full Name   |             |              | False          | True        |
+          | data.xlsx  | Sheet1    | Status       |             | Active      |              | False          | True        |
+          | data.xlsx  | Sheet1    | Date         | Birth Date  |             |              | True           | True        |
+          | data.xlsx  | Sheet1    | Category     | Type        |             | A,B,Premium  | False          | True        |
+
+        > **📝 Tips:**  
+        > - If you want a mapping to apply to all sheets in a file, leave `SheetName` blank or `"NA"`.  
+        > - If you want a mapping to apply to a specific sheet, fill in the `SheetName`.
+        > - Enhanced format is backward compatible - you can mix basic and enhanced mappings.
+        > - Filter values should be comma-separated without spaces around commas.
 
         #### 2. Upload Files
         - Upload your input files (CSV/Excel)

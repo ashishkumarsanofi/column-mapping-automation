@@ -10,7 +10,8 @@ Welcome to the **Advanced Column Mapping & Transformation Tool**! This tool is d
 - **Sheet Selection**: Choose specific sheets from Excel files for processing.
 - **Column Mapping**: Map input columns to output columns with optional static values.
 - **Filters**: Apply filters to input data for precise transformations.
-- **Date Formatting**: Automatically format date columns to `yyyy-mm-dd`.
+- **Date Formatting**: Format date columns to `yyyy-mm-dd` with user control.
+- **Enhanced Mapping Files**: Save and reuse mapping configurations including filters, static values, and formatting preferences.
 - **Error Handling**: Highlights mapping errors and provides actionable feedback.
 - **Download Options**: Export the final output as Excel or TXT (pipe-concatenated) files.
 
@@ -35,6 +36,39 @@ Welcome to the **Advanced Column Mapping & Transformation Tool**! This tool is d
 
 5. **Tips**:
    - 💡 Convert Excel files to CSV format for faster processing before uploading.
+
+---
+
+## 📋 Enhanced Mapping File Format
+
+The tool supports an enhanced mapping file format that allows you to save and reuse complex mapping configurations. This format is backward compatible with the basic format.
+
+### Basic Format (Required Columns)
+- `FileName`: Name of your input file
+- `SheetName`: Sheet name for Excel files (leave blank for CSV)
+- `OutputColumn`: Target column name in output
+- `InputColumn`: Source column name in input file
+
+### Enhanced Format (Optional Additional Columns)
+- `StaticValue`: Fixed value to assign to the column (leave blank if mapping from input)
+- `FilterValues`: Comma-separated values to filter the input data by
+- `DateFormatFlag`: `True` to format dates as yyyy-mm-dd, `False` otherwise
+- `IncludeFlag`: `True` to include the column in output, `False` to exclude
+
+### Example Enhanced Mapping File
+```csv
+FileName,SheetName,OutputColumn,InputColumn,StaticValue,FilterValues,DateFormatFlag,IncludeFlag
+data.xlsx,Sheet1,Name,Full Name,,,False,True
+data.xlsx,Sheet1,Status,,Active,,False,True
+data.xlsx,Sheet1,Date,Birth Date,,,True,True
+data.xlsx,Sheet1,Category,Type,,A,B,Premium,False,True
+```
+
+### Benefits
+- **Reusability**: Save complex mappings for repeated use
+- **Consistency**: Ensure the same mapping logic across multiple runs
+- **Automation**: Reduce manual configuration time
+- **Documentation**: Mapping files serve as documentation of your data transformation logic
 
 ---
 
@@ -90,6 +124,13 @@ pip install -r requirements.txt
 - **Improved User Control**: Date formatting now properly respects user checkbox selections - dates are only formatted when explicitly checked by the user.
 - **Multi-file Date Handling**: Fixed date format flag logic to properly consolidate date formatting preferences across multiple input files.
 - **Enhanced Reliability**: Removed automatic date formatting override that was ignoring user preferences, giving users full control over date column formatting.
+
+### Version 1.8
+- **Enhanced Mapping File Format**: Extended mapping files to support filters, static values, date formatting flags, and include/exclude preferences for complete configuration reusability.
+- **Backward Compatibility**: Existing mapping files with basic format continue to work seamlessly while supporting new enhanced features.
+- **Filter Persistence**: Filter values can now be saved in mapping files as comma-separated values and automatically applied when loading configurations.
+- **Complete State Preservation**: All UI settings (include flags, static values, date formatting, filters) can now be saved and restored from mapping files.
+- **Improved Documentation**: Updated user guide with detailed examples of both basic and enhanced mapping file formats.
 ---
 
 ## 🚦 Limits & Recommendations

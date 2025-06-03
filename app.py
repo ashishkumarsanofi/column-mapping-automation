@@ -80,13 +80,34 @@ if input_file_sheets and output_file:
     mapping_df = None
     mapping_file_valid = True
     required_mapping_cols = {"FileName", "SheetName", "OutputColumn", "InputColumn"}
+    extended_mapping_cols = {"StaticValue", "FilterValues", "DateFormatFlag", "IncludeFlag"}
+    
     if mapping_file:
         mapping_df, _ = read_file(mapping_file)
         mapping_df.columns = [str(col).strip() for col in mapping_df.columns]
+        
+        # Check if basic required columns exist
         if not required_mapping_cols.issubset(set(mapping_df.columns)):
             mapping_file_valid = False
             st.warning("⚠️ The mapping file is missing required columns: `FileName`, `SheetName`, `OutputColumn`, `InputColumn`.")
             st.dataframe(pd.DataFrame({"FileName": ["data.xlsx", "input.csv"], "SheetName": ["Sheet1", ""], "OutputColumn": ["Name", "Age"], "InputColumn": ["Full Name", "Years"]}))
+        else:
+            # Add optional columns if they don't exist (for backward compatibility)
+            for col in extended_mapping_cols:
+                if col not in mapping_df.columns:
+                    if col == "StaticValue":
+                        mapping_df[col] = ""
+                    elif col == "FilterValues":
+                        mapping_df[col] = ""
+                    elif col == "DateFormatFlag":
+                        mapping_df[col] = False
+                    elif col == "IncludeFlag":
+                        mapping_df[col] = True
+            
+            # Show info about extended format if detected
+            has_extended_cols = any(col in mapping_df.columns for col in extended_mapping_cols)
+            if has_extended_cols:
+                st.info("📋 Enhanced mapping file detected with additional configuration options!")
     if input_file_sheets and output_file and (mapping_file is None or mapping_file_valid):
         st.markdown("---")
         st.markdown("### Output Settings")

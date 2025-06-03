@@ -130,9 +130,9 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
             # Log col_occurrences after it is populated
             logging.debug(f"col_occurrences: {col_occurrences}")
-            # Add detailed logging to debug mapping logic
-            logging.debug(f"Input columns (deduplicated): {input_columns}")
+            # Add detailed logging to debug mapping logic            logging.debug(f"Input columns (deduplicated): {input_columns}")
             logging.debug(f"col_occurrences: {col_occurrences}")
+            
             # Removed automatic date formatting - user controls this with checkboxes
             column_mapping = {col: None for col in output_columns}
             include_flags = {col: True for col in output_columns}
@@ -140,6 +140,11 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             date_format_flags = {}
             active_filters = {}
             mapping_dict = {}
+            static_value_dict = {}
+            filter_dict = {}
+            date_format_dict = {}
+            include_dict = {}
+            
             if mapping_df is not None and mapping_file_valid:
                 file_name = item["file"].name
                 sheet_name = item["sheet"] or ""
@@ -147,13 +152,42 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                 mapping_df['SheetName_norm'] = mapping_df['SheetName'].fillna("").astype(str).str.strip().str.lower()
                 file_name_norm = str(file_name).strip().lower()
                 sheet_name_norm = str(sheet_name).strip().lower()
+                
                 # Allow mapping to apply to all files if FileName is blank or 'NA', and all sheets if SheetName is blank or 'NA'
                 file_mapping = mapping_df[
                     ((mapping_df['FileName_norm'] == file_name_norm) | (mapping_df['FileName_norm'].isin(["", "na"]))) &
                     ((mapping_df['SheetName_norm'] == sheet_name_norm) | (mapping_df['SheetName_norm'].isin(["", "na"])))
                 ]
+                
+                # Build dictionaries for all configuration options
                 mapping_dict = dict(zip(file_mapping['OutputColumn'], file_mapping['InputColumn']))
-            # Header row for mapping UI
+                
+                # Handle optional enhanced columns
+                if 'StaticValue' in mapping_df.columns:
+                    static_value_dict = dict(zip(file_mapping['OutputColumn'], file_mapping['StaticValue'].fillna("")))
+                
+                if 'FilterValues' in mapping_df.columns:
+                    filter_dict = {}
+                    for _, row in file_mapping.iterrows():
+                        if pd.notna(row['FilterValues']) and str(row['FilterValues']).strip():
+                            # Parse filter values (assuming they're stored as comma-separated)
+                            filter_values = [v.strip() for v in str(row['FilterValues']).split(',') if v.strip()]
+                            if filter_values:
+                                filter_dict[row['OutputColumn']] = filter_values
+                
+                if 'DateFormatFlag' in mapping_df.columns:
+                    date_format_dict = dict(zip(file_mapping['OutputColumn'], file_mapping['DateFormatFlag'].fillna(False)))
+                    # Convert string representations to boolean
+                    for key, value in date_format_dict.items():
+                        if isinstance(value, str):
+                            date_format_dict[key] = value.lower() in ['true', '1', 'yes', 'on']
+                
+                if 'IncludeFlag' in mapping_df.columns:
+                    include_dict = dict(zip(file_mapping['OutputColumn'], file_mapping['IncludeFlag'].fillna(True)))
+                    # Convert string representations to boolean
+                    for key, value in include_dict.items():
+                        if isinstance(value, str):
+                            include_dict[key] = value.lower() in ['true', '1', 'yes', 'on']            # Header row for mapping UI
             header_cols = st.columns([1, 2, 3, 2, 2.5, 2])
             with header_cols[0]:
                 st.markdown("**Include**")
@@ -167,10 +201,18 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                 st.markdown("**Filter**")
             with header_cols[5]:
                 st.markdown("**Date Format**")
+            
             for col in output_columns:
                 cols = st.columns([1, 2, 3, 2, 2.5, 2])
+                
+                # Get values from mapping file or use defaults
+                default_include = include_dict.get(col, True)
+                default_static = static_value_dict.get(col, "")
+                default_date_format = date_format_dict.get(col, ("date" in col.lower()))
+                mapped_filter_values = filter_dict.get(col, [])
+                
                 with cols[0]:
-                    include = st.checkbox("Include", value=include_flags[col], key=f"{item['label']}_{col}_inc_{idx}", label_visibility="collapsed")
+                    include = st.checkbox("Include", value=default_include, key=f"{item['label']}_{col}_inc_{idx}", label_visibility="collapsed")
                 with cols[1]:
                     st.markdown(f"<span style='line-height: 2.5'>{col}</span>", unsafe_allow_html=True)
                 with cols[2]:
@@ -181,6 +223,7 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                     if default_map not in mapping_options and isinstance(default_map, str):
                         default_map = default_map.strip()
                     mapped_col = st.selectbox("Map to Input Column", mapping_options, index=mapping_options.index(default_map) if default_map in mapping_options else 0, key=f"{item['label']}_{col}_map_{idx}", label_visibility="collapsed")
+                    
                     # --- FIXED LOGIC: Robust to whitespace and matches deduplicated columns ---
                     mapped_col_original = mapped_col  # Save for UI display
                     if mapped_col:
@@ -204,8 +247,10 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                     # Defensive: If mapped_col is not in input_columns and not --Blank--, set mapped_col to None
                     if mapped_col not in input_columns and mapped_col != "--Blank--":
                         mapped_col = None
+                        
                 with cols[3]:
-                    static_val = st.text_input("Static Value", static_values[col], key=f"{item['label']}_{col}_static_{idx}", label_visibility="collapsed")
+                    static_val = st.text_input("Static Value", default_static, key=f"{item['label']}_{col}_static_{idx}", label_visibility="collapsed")
+                    
                 with cols[4]:
                     # Use the resolved mapped_col for filter UI and checks
                     if mapped_col in ("--Select--", "--Blank--") or not mapped_col:
@@ -218,10 +263,12 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                             unique_vals = input_df[mapped_col].astype(str).unique().tolist()
                             if len(unique_vals) < 500:
                                 filter_key = f"{item['label']}_{col}_filter_{idx}"
+                                # Use pre-selected filter values from mapping file if available
+                                default_filter_values = mapped_filter_values if mapped_filter_values else []
                                 filter_values = st.multiselect(
                                     "Filter values (optional)",
                                     options=unique_vals,
-                                    default=[],
+                                    default=default_filter_values,
                                     key=filter_key
                                 )
                                 if filter_values:
@@ -230,12 +277,14 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                                 st.caption("Too many unique values to filter interactively.")
                         else:
                             st.caption(f"Column '{mapped_col}' not found or invalid in input data.")
+                            
                 with cols[5]:
                     show_date_checkbox = ("date" in col.lower() or (mapped_col and mapped_col != "--Select--" and "date" in mapped_col.lower()))
                     if show_date_checkbox:
-                        date_format_flags[col] = st.checkbox("Format as yyyy-mm-dd", value=True, key=f"{item['label']}_{col}_datefmt_{idx}")
+                        date_format_flags[col] = st.checkbox("Format as yyyy-mm-dd", value=default_date_format, key=f"{item['label']}_{col}_datefmt_{idx}")
                     else:
                         date_format_flags[col] = False
+                        
                 # Always assign mapped_col, including '--Blank--' and '--Select--'
                 column_mapping[col] = mapped_col
                 include_flags[col] = include
@@ -245,7 +294,7 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                 # Defensive: Only filter if filter_col is in input_df.columns
                 if filter_vals and filter_col in filtered_df.columns:
                     filtered_df = filtered_df[filtered_df[filter_col].astype(str).isin(filter_vals)]
-            final_dataframes.append({"file": item["file"], "label": item["label"], "sheet": item.get("sheet"), "input_df": filtered_df, "column_mapping": column_mapping, "include_flags": include_flags, "static_values": static_values, "date_format_flags": date_format_flags})
+            final_dataframes.append({"file": item["file"], "label": item["label"], "sheet": item.get("sheet"), "input_df": filtered_df, "column_mapping": column_mapping, "include_flags": include_flags, "static_values": static_values, "date_format_flags": date_format_flags, "active_filters": active_filters})
     output_filename = st.text_input("📄 Enter Output File Name:", value="final_output", help="This will be the name of your output Excel and TXT files", key="output_file_name")
     return final_dataframes, output_filename
 
@@ -357,6 +406,7 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                 txt_content = "\n".join([header_line] + txt_lines.to_list())
                 txt_content = txt_content.encode("utf-16")
                 st.download_button(label="📝 Download as TXT (pipe-concat)", data=txt_content, file_name=f"{output_filename}.txt", mime="text/plain")
+                
                 mapping_rows = []
                 for file_data in final_dataframes:
                     file_name = file_data["file"].name
@@ -370,8 +420,31 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                         mapped_col = file_data["column_mapping"].get(col, "")
                         if mapped_col is None:
                             mapped_col = ""
-                        mapping_rows.append({"FileName": file_name, "SheetName": sheet_name, "OutputColumn": col, "InputColumn": mapped_col})
-                mapping_export_df = pd.DataFrame(mapping_rows, columns=["FileName", "SheetName", "OutputColumn", "InputColumn"])
+                        
+                        static_value = file_data["static_values"].get(col, "")
+                        include_flag = file_data["include_flags"].get(col, True)
+                        date_format_flag = file_data["date_format_flags"].get(col, False)
+                          # For filter values, we need to get them from active_filters based on the mapped column
+                        filter_values = ""
+                        if mapped_col and mapped_col in file_data.get("active_filters", {}):
+                            filter_list = file_data["active_filters"][mapped_col]
+                            filter_values = ",".join(filter_list) if filter_list else ""
+                        
+                        mapping_rows.append({
+                            "FileName": file_name, 
+                            "SheetName": sheet_name, 
+                            "OutputColumn": col, 
+                            "InputColumn": mapped_col,
+                            "StaticValue": static_value,
+                            "FilterValues": filter_values,
+                            "DateFormatFlag": date_format_flag,
+                            "IncludeFlag": include_flag
+                        })
+                
+                mapping_export_df = pd.DataFrame(mapping_rows, columns=[
+                    "FileName", "SheetName", "OutputColumn", "InputColumn", 
+                    "StaticValue", "FilterValues", "DateFormatFlag", "IncludeFlag"
+                ])
                 mapping_csv = mapping_export_df.to_csv(index=False).encode("utf-8")
                 col1, col2 = st.columns([3, 1])
                 with col2:
