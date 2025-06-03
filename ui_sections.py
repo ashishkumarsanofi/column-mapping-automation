@@ -40,7 +40,7 @@ def show_footer():
     """
     st.markdown("""
     <style>
-    .footer-ashish {color: rgba(180,180,180,0.35); background: transparent; text-align: right; font-size: 0.72rem; padding: 0 8px 2px 0; margin-top: 10px; margin-bottom: 2px; user-select: none; letter-spacing: 0.01em;}
+    .footer-ashish {color: rgba(180,180,180,0.35); background: transparent; text-align: right; font-size: 0.71rem; padding: 0 8px 2px 0; margin-top: 10px; margin-bottom: 2px; user-select: none; letter-spacing: 0.01em;}
     </style>
     <div class="footer-ashish">Made with ❤️ by Ashish Kumar</div>
     """, unsafe_allow_html=True)
