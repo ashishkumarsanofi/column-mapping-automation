@@ -64,18 +64,18 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
     tabs = st.tabs(tab_labels)
     for idx, (item, tab) in enumerate(zip(active_file_sheets, tabs)):
         with tab:
-            st.subheader(f"Mapping for: {item['label']}")
-            # Single master checkbox for select/unselect all
-            master_key = f"{item['label']}_master_select_{idx}"
-            # Determine if all columns are currently selected
-            all_selected = all(st.session_state.get(f"{item['label']}_{col}_inc_{idx}", True) for col in output_columns)
-            # Use a local variable to avoid Streamlit's rerun delay
-            master_value = st.checkbox("Select/Deselect All Columns", value=all_selected, key=master_key)
-            # Only update if the user actually toggled the master checkbox
-            if master_value != all_selected:
-                # Update all columns' state directly when the checkbox is toggled
-                for col in output_columns:
-                    st.session_state[f"{item['label']}_{col}_inc_{idx}"] = master_value
+            st.subheader(f"Mapping for: {item['label']}")            # Master control buttons for select/deselect all
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✅ Select All Columns", key=f"{item['label']}_select_all_{idx}"):
+                    for col in output_columns:
+                        st.session_state[f"{item['label']}_{col}_inc_{idx}"] = True
+                    st.rerun()
+            with col2:
+                if st.button("❌ Deselect All Columns", key=f"{item['label']}_deselect_all_{idx}"):
+                    for col in output_columns:
+                        st.session_state[f"{item['label']}_{col}_inc_{idx}"] = False
+                    st.rerun()
             if item["sheet"]:
                 input_df = cached_read_excel(item["file"], item["sheet"], None)  # Read all columns
             else:
