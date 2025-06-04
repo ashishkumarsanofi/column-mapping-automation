@@ -24,8 +24,8 @@ st.write("Streamlit version:", st.__version__)
 
 SANOFI_COLORS = {
     'primary': '#000000',
-    'secondary': '#7A0056',
-    'accent': '#4B0082',
+    'secondary': "#BA198A",
+    'accent': "#630BA2",
     'background': '#FFFFFF',
     'text': '#000000'
 }
