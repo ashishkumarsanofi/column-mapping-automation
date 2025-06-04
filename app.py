@@ -24,7 +24,7 @@ st.write("Streamlit version:", st.__version__)
 
 SANOFI_COLORS = {
     'primary': '#000000',
-    'secondary': "#BA198A",
+    'secondary': "#BB0083",
     'accent': "#630BA2",
     'background': '#FFFFFF',
     'text': '#000000'
@@ -32,7 +32,7 @@ SANOFI_COLORS = {
 
 st.markdown("""
 <style>
-    .stButton>button {background-color: #7A0056; color: white; border-radius: 5px; padding: 0.5rem 1rem; border: none;}
+    .stButton>button {background-color: #BB0083; color: white; border-radius: 5px; padding: 0.5rem 1rem; border: none;}
     .stButton>button:hover {background-color: #4B0082;}
     .mapping-header {color: #7A0056; font-weight: bold; padding: 10px; background-color: #F8F9FA; border-left: 3px solid #7A0056;}
     .sample-column {background-color: #F8F9FA; padding: 10px; border-left: 3px solid #7A0056; margin: 5px 0;}
