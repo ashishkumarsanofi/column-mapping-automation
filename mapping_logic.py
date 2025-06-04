@@ -65,7 +65,7 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
     for idx, (item, tab) in enumerate(zip(active_file_sheets, tabs)):
         with tab:
             st.subheader(f"Mapping for: {item['label']}")            # Master control buttons for select/deselect all
-            col1, col2, col3 = st.columns([1, 1, 4])
+            col1, col2, col3 = st.columns([1, 1, 3])
             with col1:
                 if st.button("✅ Select All Columns", key=f"{item['label']}_select_all_{idx}"):
                     for col in output_columns:
