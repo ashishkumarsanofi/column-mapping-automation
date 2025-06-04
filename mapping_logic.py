@@ -98,13 +98,29 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                 # Keep data from rows after the header row
                 df = df[header_row_idx + 1:].reset_index(drop=True)
                 return df, None
+              # Show preview of first few rows to help user identify header row
+            st.markdown("**📋 File Preview** (to help identify header row):")
+            preview_rows = min(5, len(input_df))
+            preview_data = []
+            for i in range(preview_rows):
+                row_content = input_df.iloc[i].astype(str).tolist()
+                # Truncate long content for display
+                row_display = [content[:30] + "..." if len(content) > 30 else content for content in row_content]
+                preview_data.append({
+                    "Row": f"Row {i + 1}",
+                    "Content": " | ".join(row_display[:3]) + (" | ..." if len(row_display) > 3 else "")
+                })
+            
+            preview_df = pd.DataFrame(preview_data)
+            st.dataframe(preview_df, use_container_width=True, hide_index=True)
             
             # Option for user to specify which row contains column headers
             header_row_input = st.text_input(
-                "📍 (Optional) Which row contains the column headers? Enter row number (e.g., 3 for row 3):",
+                "📍 (Optional) Which row contains the column headers?",
                 value="",
                 key=f"{item['label']}_header_row_{idx}",
-                help="Leave empty to use row 1 as headers, or enter a number if headers are in a different row"
+                help="Enter the row number that contains your column headers (e.g., if headers are in Row 3, enter '3'). Leave empty to use Row 1 as headers.",
+                placeholder="Enter row number (e.g., 3)"
             )
             
             # Process header row specification
@@ -113,24 +129,38 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                     header_row_number = int(header_row_input.strip())
                     if header_row_number < 1:
                         st.error("❌ Row number must be 1 or greater.")
+                    elif header_row_number > len(input_df):
+                        st.error(f"❌ Row {header_row_number} doesn't exist. File only has {len(input_df)} rows.")
                     else:
                         header_row_idx = header_row_number - 1  # Convert to 0-based index
+                        
+                        # Show what will be used as headers for confirmation
+                        header_preview = input_df.iloc[header_row_idx].astype(str).tolist()
+                        st.info(f"🔍 **Row {header_row_number} content:** {' | '.join(header_preview[:5])}")
+                        
                         input_df, error_msg = process_header_row(input_df, header_row_idx)
                         if error_msg:
                             st.warning(f"⚠️ {error_msg}")
                         else:
-                            st.success(f"✅ Using row {header_row_number} as column headers.")
+                            st.success(f"✅ Using Row {header_row_number} as column headers. Headers: {', '.join(list(input_df.columns)[:5])}")
                 except ValueError:
                     st.error("❌ Please enter a valid row number (e.g., 3).")
             else:
-                # Auto-detect: if first row is empty, use second row as headers
+                # Auto-detect: if first row is empty, try to find the first non-empty row for headers
                 if len(input_df) > 0 and input_df.iloc[0].isnull().all():
-                    if len(input_df) > 1:
-                        input_df, error_msg = process_header_row(input_df, 1)  # Use row 2 (index 1)
-                        if not error_msg:
-                            st.info("ℹ️ First row was empty, automatically using row 2 as headers.")
-                    else:
-                        st.warning("⚠️ File appears to have only empty rows.")
+                    # Look for the first non-empty row to use as headers
+                    header_found = False
+                    for check_idx in range(1, min(len(input_df), 5)):  # Check first 5 rows max
+                        if not input_df.iloc[check_idx].isnull().all():
+                            input_df, error_msg = process_header_row(input_df, check_idx)
+                            if not error_msg:
+                                excel_row_num = check_idx + 1  # Convert back to Excel row number
+                                st.info(f"ℹ️ First row was empty, automatically using row {excel_row_num} as headers.")
+                                header_found = True
+                                break
+                    
+                    if not header_found:
+                        st.warning("⚠️ Could not find non-empty row for headers in the first 5 rows.")
             # Only keep columns from input file, not output template
             input_columns = input_df.columns.tolist()
             # Build a mapping of base column names to their occurrences (for deduplication)
