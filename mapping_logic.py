@@ -79,41 +79,58 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             if item["sheet"]:
                 input_df = cached_read_excel(item["file"], item["sheet"], None)  # Read all columns
             else:
-                input_df, validation_errors = cached_read_file(item["file"])
-            # --- STRIP WHITESPACE BEFORE DEDUPLICATION ---
+                input_df, validation_errors = cached_read_file(item["file"])            # --- STRIP WHITESPACE BEFORE DEDUPLICATION ---
             input_df.columns = input_df.columns.str.strip()
-            # Option for user to specify the cell (row/col) where column names start
-            col_header_cell = st.text_input(
-                "(Optional) Enter row number where column names start (e.g., 4):",
+            
+            # Helper function to process header row and update DataFrame
+            def process_header_row(df, header_row_idx):
+                """Extract headers from specified row and return updated DataFrame"""
+                if header_row_idx < 0 or header_row_idx >= len(df):
+                    return df, f"Row {header_row_idx + 1} is out of bounds for this file."
+                
+                header_row = df.iloc[header_row_idx]
+                if header_row.isnull().all():
+                    return df, f"Row {header_row_idx + 1} is all empty/NaN. Please check your file."
+                
+                # Set new column names from the specified row
+                df.columns = header_row.astype(str).str.strip()
+                df.columns = deduplicate_columns(df.columns)
+                # Keep data from rows after the header row
+                df = df[header_row_idx + 1:].reset_index(drop=True)
+                return df, None
+            
+            # Option for user to specify which row contains column headers
+            header_row_input = st.text_input(
+                "📍 (Optional) Which row contains the column headers? Enter row number (e.g., 3 for row 3):",
                 value="",
-                key=f"{item['label']}_col_header_cell_{idx}"
+                key=f"{item['label']}_header_row_{idx}",
+                help="Leave empty to use row 1 as headers, or enter a number if headers are in a different row"
             )
-            # If user provides a cell reference or row number, adjust DataFrame accordingly
-            if col_header_cell:
-                import re
-                match = re.match(r"(\d+)", col_header_cell.strip())
-                if match:
-                    row_part = match.group(1)
-                    row_idx = int(row_part) - 1  # Excel is 1-based, pandas is 0-based
-                    if 0 <= row_idx < len(input_df):
-                        if input_df.iloc[row_idx].isnull().all():
-                            st.warning(f"Row {row_part} is all empty/NaN. Please check your file.")
-                        else:
-                            # STRIP WHITESPACE BEFORE DEDUPLICATION
-                            input_df.columns = input_df.iloc[row_idx].astype(str).str.strip()
-                            input_df.columns = deduplicate_columns(input_df.columns)
-                            input_df = input_df[row_idx+1:].reset_index(drop=True)
+            
+            # Process header row specification
+            if header_row_input.strip():
+                try:
+                    header_row_number = int(header_row_input.strip())
+                    if header_row_number < 1:
+                        st.error("❌ Row number must be 1 or greater.")
                     else:
-                        st.warning(f"Row {row_part} is out of bounds for this file.")
-                else:
-                    st.warning("Invalid row number. Please enter a valid integer (e.g., 4). Only row number is supported.")
+                        header_row_idx = header_row_number - 1  # Convert to 0-based index
+                        input_df, error_msg = process_header_row(input_df, header_row_idx)
+                        if error_msg:
+                            st.warning(f"⚠️ {error_msg}")
+                        else:
+                            st.success(f"✅ Using row {header_row_number} as column headers.")
+                except ValueError:
+                    st.error("❌ Please enter a valid row number (e.g., 3).")
             else:
-                # Fallback: if first row is empty, use current logic
-                if input_df.iloc[0].isnull().all():
-                    # STRIP WHITESPACE BEFORE DEDUPLICATION
-                    input_df.columns = input_df.iloc[1].astype(str).str.strip()
-                    input_df.columns = deduplicate_columns(input_df.columns)
-                    input_df = input_df[2:].reset_index(drop=True)
+                # Auto-detect: if first row is empty, use second row as headers
+                if len(input_df) > 0 and input_df.iloc[0].isnull().all():
+                    if len(input_df) > 1:
+                        input_df, error_msg = process_header_row(input_df, 1)  # Use row 2 (index 1)
+                        if not error_msg:
+                            st.info("ℹ️ First row was empty, automatically using row 2 as headers.")
+                    else:
+                        st.warning("⚠️ File appears to have only empty rows.")
             # Only keep columns from input file, not output template
             input_columns = input_df.columns.tolist()
             # Build a mapping of base column names to their occurrences (for deduplication)
@@ -129,8 +146,8 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
             import logging
             logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
             # Log col_occurrences after it is populated
-            logging.debug(f"col_occurrences: {col_occurrences}")
-            # Add detailed logging to debug mapping logic            logging.debug(f"Input columns (deduplicated): {input_columns}")
+            logging.debug(f"col_occurrences: {col_occurrences}")            # Add detailed logging to debug mapping logic
+            logging.debug(f"Input columns (deduplicated): {input_columns}")
             logging.debug(f"col_occurrences: {col_occurrences}")
             
             # Removed automatic date formatting - user controls this with checkboxes
