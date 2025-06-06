@@ -400,7 +400,7 @@ def process_final_output(final_dataframes, output_columns, output_filename):
                 combined_df_list.append(df_output)
             if all_mapping_errors:
                 st.warning("⚠️ Please resolve the mapping errors below before proceeding.")
-                try: st.toast("⚠️ Mapping errors found! Please check and fix them.", icon="⚠️")
+                try: st.toast("Mapping errors found! Please check and fix them.", icon="⚠️")
                 except Exception: pass
                 for err in all_mapping_errors:
                     st.markdown(err, unsafe_allow_html=True)

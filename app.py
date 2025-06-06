@@ -32,8 +32,8 @@ SANOFI_COLORS = {
 
 st.markdown("""
 <style>
-    .stButton>button {background-color: #3498DB; color: white; border-radius: 6px; padding: 0.5rem 1rem; border: none; transition: all 0.3s ease;}
-    .stButton>button:hover {background-color: #2980B9; transform: translateY(-1px);}
+    .stButton>button {background-color: #2980B9; color: white; border-radius: 6px; padding: 0.5rem 1rem; border: none; transition: all 0.3s ease; font-weight: 500;}
+    .stButton>button:hover {background-color: #1F618D; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.2);}
     .mapping-header {color: #2C3E50; font-weight: bold; padding: 12px; background-color: #F8F9FA; border-left: 4px solid #3498DB; border-radius: 4px;}
     .sample-column {background-color: #F8F9FA; padding: 12px; border-left: 4px solid #2ECC71; margin: 8px 0; border-radius: 4px;}
     .error-message {color: #E74C3C; background-color: #FADBD8; border-left: 4px solid #E74C3C; font-size: 0.95rem; padding: 8px 14px; margin: 6px 0; border-radius: 4px;}
@@ -77,7 +77,7 @@ st.markdown("""
         color: #3498DB !important;
     }
     h3 {
-        color: #2C3E50 !important;
+        color: #3282B8 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -139,14 +139,14 @@ if input_file_sheets and output_file:
                         mapping_df[col] = False
                     elif col == "IncludeFlag":
                         mapping_df[col] = True
-            
-            # Show info about extended format if detected
+              # Show info about extended format if detected
             has_extended_cols = any(col in mapping_df.columns for col in extended_mapping_cols)
             if has_extended_cols:
                 st.info("📋 Enhanced mapping file detected with additional configuration options!")
+    
     if input_file_sheets and output_file and (mapping_file is None or mapping_file_valid):
         st.markdown("---")
-        st.markdown("### Output Settings")
+        st.markdown(f'<h3 style="color: {SANOFI_COLORS["secondary"]}; font-weight: 600; margin-bottom: 1rem;">2.Output Settings</h3>', unsafe_allow_html=True)
         final_dataframes, output_filename = process_mapping_tabs(
             input_file_sheets, output_file, mapping_file, mapping_file_valid, mapping_df, output_columns
         )

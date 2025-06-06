@@ -15,7 +15,7 @@ def show_upload_section(SANOFI_COLORS):
     Returns:
         tuple: (input_files, output_file, mapping_file)
     """
-    st.markdown(f'<h2 style="color: {SANOFI_COLORS["secondary"]};">1. Upload Files</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="color: {SANOFI_COLORS["secondary"]};">1. Upload Files</h3>', unsafe_allow_html=True)
     
     # Create 3 columns for the upload sections
     col1, col2, col3 = st.columns(3)
