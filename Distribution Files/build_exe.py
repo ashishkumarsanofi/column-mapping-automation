@@ -1,5 +1,6 @@
 """
 Build script to create executable for the Streamlit app
+Updated for latest changes including dynamic upload size handling
 """
 import subprocess
 import sys
@@ -8,19 +9,30 @@ import os
 def create_executable():
     """Create executable using PyInstaller"""
     
+    print("🔧 Installing required dependencies...")
     # Install PyInstaller if not present
     try:
         import PyInstaller
+        print("✅ PyInstaller already installed")
     except ImportError:
-        print("Installing PyInstaller...")
+        print("📦 Installing PyInstaller...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
-      # PyInstaller command
+    
+    # Install other required packages
+    required_packages = ["streamlit", "pandas", "openpyxl"]
+    for package in required_packages:
+        try:
+            __import__(package)
+            print(f"✅ {package} already installed")
+        except ImportError:
+            print(f"📦 Installing {package}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+      # PyInstaller command with enhanced configuration
     cmd = [
         "pyinstaller",
         "--onefile",
-        "--windowed",
+        "--console",  # Changed from --windowed to --console for debugging
         "--name=ColumnMappingTool",
-        "--icon=../icon.ico",  # Optional: add if you have an icon
         "--add-data=../ui_sections.py;.",
         "--add-data=../file_utils.py;.",
         "--add-data=../mapping_logic.py;.",
@@ -28,22 +40,51 @@ def create_executable():
         "--hidden-import=streamlit",
         "--hidden-import=pandas",
         "--hidden-import=openpyxl",
+        "--hidden-import=xlrd",
+        "--hidden-import=xlsxwriter",
+        "--hidden-import=io",
+        "--hidden-import=warnings",
+        "--hidden-import=time",
+        "--hidden-import=socket",
+        "--hidden-import=subprocess",
+        "--collect-data=streamlit",
+        "--collect-submodules=streamlit",
+        "--noconfirm",  # Overwrite without asking
         "app_launcher.py"
     ]
-      # Remove icon parameter if no icon file exists
-    if not os.path.exists("../icon.ico"):
-        cmd = [c for c in cmd if not c.startswith("--icon")]
     
-    print("Building executable...")
+    print("🔨 Building executable...")
+    print("📂 This may take a few minutes...")
     try:
         subprocess.run(cmd, check=True)
         print("\n✅ Executable created successfully!")
         print("📁 Find your app in the 'dist' folder: ColumnMappingTool.exe")
-        print("\n📋 To distribute:")
-        print("   1. Share the ColumnMappingTool.exe file")
-        print("   2. Users just double-click to run!")
+        print(f"📊 File size: ~{get_file_size('dist/ColumnMappingTool.exe')} MB")
+        print("\n📋 Distribution Instructions:")
+        print("   1. Copy 'ColumnMappingTool.exe' from the 'dist' folder")
+        print("   2. Share this single file with users")
+        print("   3. Users just double-click to run - no installation needed!")
+        print("   4. The app will open in their default browser automatically")
+        print("\n💡 Tips for sharing:")
+        print("   • Upload to cloud storage (Google Drive, Dropbox, etc.)")
+        print("   • Email as attachment (if file size allows)")
+        print("   • Share via USB drive or network folder")
+        print("   • Works on any Windows machine without Python installed")
     except subprocess.CalledProcessError as e:
         print(f"❌ Build failed: {e}")
+        print("\n🔧 Troubleshooting:")
+        print("   • Make sure you're in the 'Distribution Files' folder")
+        print("   • Try running: pip install pyinstaller streamlit pandas openpyxl")
+        print("   • Check that all .py files exist in the parent directory")
+
+def get_file_size(filepath):
+    """Get file size in MB"""
+    try:
+        size_bytes = os.path.getsize(filepath)
+        size_mb = size_bytes / (1024 * 1024)
+        return f"{size_mb:.1f}"
+    except FileNotFoundError:
+        return "Unknown"
 
 if __name__ == "__main__":
     create_executable()
