@@ -62,12 +62,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-
-
-st.markdown("Upload multiple input files and a sample file to map and consolidate your data with optional static values.")
 show_guide()
-# Suggest converting Excel files to CSV for faster processing before uploading
-st.info("💡 Tip: Convert Excel files to CSV format for faster processing before uploading.")
+
 # --- Upload Section ---
 input_files, output_file, mapping_file = show_upload_section(SANOFI_COLORS)
 print("upload-done")  # Step marker
