@@ -45,7 +45,7 @@ copy ui_sections.py "CLEAN_DISTRIBUTION_PACKAGE\" >nul 2>&1
 copy requirements.txt "CLEAN_DISTRIBUTION_PACKAGE\" >nul 2>&1
 echo ✅ Distribution package updated with latest files!
 echo 📦 CLEAN_DISTRIBUTION_PACKAGE is now ready to share with team members
-echo 💡 Team members can copy this entire folder and use it independently
+echo 💡 Team members can copy this entire folder and use RUN_MAPPING_TOOL.bat
 goto menu
 
 :info

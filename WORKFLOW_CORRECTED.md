@@ -22,11 +22,18 @@
 3. **Update distribution**: Run `DEV_HELPER.bat` → Option 2 (syncs files)
 4. **Share**: Give team the entire `CLEAN_DISTRIBUTION_PACKAGE` folder
 
-### For Team Members:
+### For Team Members (EVEN SIMPLER NOW):
 1. **Get the folder**: Copy entire `CLEAN_DISTRIBUTION_PACKAGE` to their computer
-2. **Setup**: Double-click `SETUP.bat` (one time)
-3. **Use tool**: Double-click `START_MAPPING_TOOL.bat`
-4. **Stop tool**: Double-click `STOP_APP.bat`
+2. **Run tool**: Double-click `RUN_MAPPING_TOOL.bat` (does everything automatically!)
+3. **Stop tool**: Double-click `STOP_APP.bat`
+
+## 🎯 New Smart Features
+
+✅ **Python Detection**: Automatically checks if Python is installed
+✅ **Auto-Download**: Opens Python download page if missing
+✅ **Package Installation**: Installs Streamlit, Pandas, OpenPyXL automatically  
+✅ **One-Click Solution**: Everything in a single batch file
+✅ **Smart Error Handling**: Clear instructions for each potential issue
 
 ## 📁 Final Structure
 
@@ -43,11 +50,9 @@
     ├── ✅ ui_sections.py (synced copy)
     ├── ✅ file_utils.py (synced copy)
     ├── ✅ mapping_logic.py (synced copy)
-    ├── ✅ requirements.txt (synced copy)
-    ├── 📖 README_FIRST.txt
+    ├── ✅ requirements.txt (synced copy)    ├── 📖 README_FIRST.txt
     ├── 📖 USER_GUIDE.md
-    ├── ⚙️ SETUP.bat
-    ├── ▶️ START_MAPPING_TOOL.bat
+    ├── 🚀 RUN_MAPPING_TOOL.bat (ALL-IN-ONE LAUNCHER!)
     └── ⏹️ STOP_APP.bat
 ```
 
@@ -57,7 +62,9 @@
 ✅ **Easy sync**: DEV_HELPER.bat copies files to distribution package  
 ✅ **Self-contained sharing**: Team gets everything in one folder
 ✅ **No dependency issues**: Works anywhere, no parent directory needed
-✅ **Clean separation**: Development vs distribution clearly separated
+✅ **Smart Python detection**: Automatically handles Python installation
+✅ **One-click solution**: Single file does setup + launch
+✅ **Beginner-friendly**: Works even for non-technical users
 
 ## 💡 Important Notes
 
