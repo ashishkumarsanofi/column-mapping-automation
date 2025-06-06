@@ -23,41 +23,61 @@ st.title("📊 Advanced Column Mapping & Transformation Tool")
 st.write("Streamlit version:", st.__version__)
 
 SANOFI_COLORS = {
-    'primary': '#000000',
-    'secondary': "#BB0083",
-    'accent': "#630BA2",
-    'background': '#FFFFFF',
-    'text': '#000000'
+    'primary': '#2C3E50',      # Soft dark blue-gray
+    'secondary': '#3498DB',    # Gentle blue
+    'accent': '#2ECC71',       # Soft green
+    'background': '#F8F9FA',   # Light gray background
+    'text': '#34495E'          # Readable dark gray
 }
 
 st.markdown("""
 <style>
-    .stButton>button {background-color: #BB0083; color: white; border-radius: 5px; padding: 0.5rem 1rem; border: none;}
-    .stButton>button:hover {background-color: #4B0082;}
-    .mapping-header {color: #7A0056; font-weight: bold; padding: 10px; background-color: #F8F9FA; border-left: 3px solid #7A0056;}
-    .sample-column {background-color: #F8F9FA; padding: 10px; border-left: 3px solid #7A0056; margin: 5px 0;}
-    .error-message {color: #a94442; background-color: #f9eaea; border-left: 3px solid #e6a1a1; font-size: 0.95rem; padding: 6px 12px; margin: 4px 0; border-radius: 4px;}
-    .success-message {color: #008000; padding: 10px; border-left: 3px solid #008000; background-color: #E6FFE6; margin: 5px 0;}
-    .footer-ashish {color: rgba(180,180,180,0.35); background: transparent; text-align: right; font-size: 0.72rem; padding: 0 8px 2px 0; margin-top: 10px; margin-bottom: 2px; user-select: none; letter-spacing: 0.01em;}
+    .stButton>button {background-color: #3498DB; color: white; border-radius: 6px; padding: 0.5rem 1rem; border: none; transition: all 0.3s ease;}
+    .stButton>button:hover {background-color: #2980B9; transform: translateY(-1px);}
+    .mapping-header {color: #2C3E50; font-weight: bold; padding: 12px; background-color: #F8F9FA; border-left: 4px solid #3498DB; border-radius: 4px;}
+    .sample-column {background-color: #F8F9FA; padding: 12px; border-left: 4px solid #2ECC71; margin: 8px 0; border-radius: 4px;}
+    .error-message {color: #E74C3C; background-color: #FADBD8; border-left: 4px solid #E74C3C; font-size: 0.95rem; padding: 8px 14px; margin: 6px 0; border-radius: 4px;}
+    .success-message {color: #27AE60; padding: 12px; border-left: 4px solid #2ECC71; background-color: #D5F4E6; margin: 8px 0; border-radius: 4px;}
+    .footer-ashish {color: rgba(52, 73, 94, 0.4); background: transparent; text-align: right; font-size: 0.72rem; padding: 0 8px 2px 0; margin-top: 12px; margin-bottom: 2px; user-select: none; letter-spacing: 0.01em;}
     
     /* Enhanced styling for 3-column upload layout */
     div[data-testid="column"] {
-        padding: 0 10px;
+        padding: 0 12px;
+        border-radius: 8px;
     }
     div[data-testid="column"] h4 {
-        margin-bottom: 5px !important;
-        color: #BB0083;
+        margin-bottom: 8px !important;
+        color: #3498DB;
+        font-weight: 600;
     }
     div[data-testid="column"] .element-container p {
         margin-top: 0 !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 12px !important;
         font-style: italic;
-        color: #666;
+        color: #7F8C8D;
         font-size: 0.9rem;
     }
     .stFileUploader label {
         font-size: 0.9rem !important;
         font-weight: 500 !important;
+        color: #34495E;
+    }
+      /* Overall app styling improvements */
+    .main .block-container {
+        padding-top: 2rem;
+        max-width: 1200px;
+    }
+    h1 {
+        color: #1E88E5 !important;
+        margin-bottom: 1rem !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    h2 {
+        color: #3498DB !important;
+    }
+    h3 {
+        color: #2C3E50 !important;
     }
 </style>
 """, unsafe_allow_html=True)
