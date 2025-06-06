@@ -52,7 +52,10 @@ def show_upload_section(SANOFI_COLORS):
         )
     
     # Add a subtle note about file size limits
-    st.caption("💡 Tip: Files up to 200MB supported • Convert Excel to CSV for faster processing")
+    # Dynamically get the max upload size from environment or Streamlit config
+    import os
+    max_upload_mb = int(os.environ.get("STREAMLIT_SERVER_MAX_UPLOAD_SIZE", "200"))
+    st.caption(f"💡 Tip: Files up to {max_upload_mb}MB supported • Convert Excel to CSV for faster processing")
     return input_files, output_file, mapping_file
 
 def show_footer():
