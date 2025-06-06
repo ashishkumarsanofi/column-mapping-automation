@@ -39,6 +39,26 @@ st.markdown("""
     .error-message {color: #a94442; background-color: #f9eaea; border-left: 3px solid #e6a1a1; font-size: 0.95rem; padding: 6px 12px; margin: 4px 0; border-radius: 4px;}
     .success-message {color: #008000; padding: 10px; border-left: 3px solid #008000; background-color: #E6FFE6; margin: 5px 0;}
     .footer-ashish {color: rgba(180,180,180,0.35); background: transparent; text-align: right; font-size: 0.72rem; padding: 0 8px 2px 0; margin-top: 10px; margin-bottom: 2px; user-select: none; letter-spacing: 0.01em;}
+    
+    /* Enhanced styling for 3-column upload layout */
+    div[data-testid="column"] {
+        padding: 0 10px;
+    }
+    div[data-testid="column"] h4 {
+        margin-bottom: 5px !important;
+        color: #BB0083;
+    }
+    div[data-testid="column"] .element-container p {
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+        font-style: italic;
+        color: #666;
+        font-size: 0.9rem;
+    }
+    .stFileUploader label {
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 

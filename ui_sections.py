@@ -9,30 +9,50 @@ import pandas as pd
 
 def show_upload_section(SANOFI_COLORS):
     """
-    Renders the file upload section in the Streamlit UI.
+    Renders the file upload section in the Streamlit UI with a 3-column layout.
     Args:
         SANOFI_COLORS (dict): Color palette for UI styling.
     Returns:
         tuple: (input_files, output_file, mapping_file)
     """
     st.markdown(f'<h2 style="color: {SANOFI_COLORS["secondary"]};">1. Upload Files</h2>', unsafe_allow_html=True)
-    input_files = st.file_uploader(
-        "Upload One or More Input Files (CSV or Excel)", 
-        type=["csv", "xlsx"], 
-        accept_multiple_files=True,
-        key="input_files_uploader"
-    )
-    output_file = st.file_uploader(
-        "Upload Output Template File (CSV or Excel)", 
-        type=["csv", "xlsx"],
-        key="sample_file_uploader"
-    )
-    mapping_file = st.file_uploader(
-        "Upload Optional Column Mapping Reference (CSV or Excel)", 
-        type=["csv", "xlsx"],
-        key="mapping_file_uploader"
-    )
-    # st.caption("📦 Max upload size per file: 1GB")
+    
+    # Create 3 columns for the upload sections
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("#### 📁 Input Files")
+        st.markdown("*Your source data files*")
+        input_files = st.file_uploader(
+            "Upload your data files (CSV or Excel)", 
+            type=["csv", "xlsx"], 
+            accept_multiple_files=True,
+            key="input_files_uploader",
+            help="Upload one or more CSV or Excel files containing your source data"
+        )
+    
+    with col2:
+        st.markdown("#### 🎯 Output Template")
+        st.markdown("*Define your target structure*")
+        output_file = st.file_uploader(
+            "Upload output template file (CSV or Excel)", 
+            type=["csv", "xlsx"],
+            key="sample_file_uploader",
+            help="Upload a template file that defines your desired output column structure"
+        )
+    
+    with col3:
+        st.markdown("#### 🗂️ Mapping File")
+        st.markdown("*Optional pre-configured mappings*")
+        mapping_file = st.file_uploader(
+            "Upload mapping reference (Optional)", 
+            type=["csv", "xlsx"],
+            key="mapping_file_uploader",
+            help="Optional: Upload a pre-configured mapping file to speed up the process"
+        )
+    
+    # Add a subtle note about file size limits
+    st.caption("💡 Tip: Files up to 200MB supported • Convert Excel to CSV for faster processing")
     return input_files, output_file, mapping_file
 
 def show_footer():
