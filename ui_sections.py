@@ -5,6 +5,7 @@ Streamlit UI components for file upload, footer, and user guide sections.
 """
 
 import streamlit as st
+import pandas as pd
 
 def show_upload_section(SANOFI_COLORS):
     """
@@ -93,12 +94,73 @@ def show_guide():
         #### 2. Upload Files
         - Upload your input files (CSV/Excel)
         - Upload your output template file (CSV/Excel)
-        - Optionally upload a mapping reference file
-
+        - Optionally upload a mapping reference file    
+                    
         #### 3. Map Columns for Each File
         For each input file or sheet, you'll see a tab where you can:
         - ☑️ **Include/Exclude**: Toggle columns you want in the output
         - 📍 **Output Column**: View the target column names
         - 🔄 **Map to Input Column**: Select which input column maps to each output column
         - 📝 **Static Value**: Optionally enter a fixed value instead of mapping
+        - 🗂️ **Filter**: Apply filters to input data (optional)
+        - 📅 **Date Format**: Enable date formatting to yyyy-mm-dd format (optional)
+
+        #### 4. Generate Output
+        - Review your mappings and click "Generate Final Output"
+        - Download the consolidated Excel or TXT file
+
+        #### 5. Save Your Configuration
+        - Download the mapping configuration file for future use
+        - Reuse saved configurations to speed up repeated tasks
         """)
+        
+        # Add sample mapping file download section
+        st.markdown("---")
+        st.markdown("#### 📥 Download Sample Mapping Files")
+        st.markdown("Get started quickly with these pre-configured mapping file templates:")
+        
+        # Create sample mapping data
+        sample_basic_data = {
+            'FileName': ['input_data.xlsx', 'input_data.xlsx', 'sales_data.csv', 'sales_data.csv'],
+            'SheetName': ['Sheet1', 'Sheet1', '', ''],
+            'OutputColumn': ['Customer_Name', 'Order_Date', 'Product_ID', 'Revenue'],
+            'InputColumn': ['Full Name', 'Date', 'SKU', 'Total Amount']
+        }
+        
+        sample_enhanced_data = {
+            'FileName': ['input_data.xlsx', 'input_data.xlsx', 'input_data.xlsx', 'sales_data.csv', 'sales_data.csv'],
+            'SheetName': ['Sheet1', 'Sheet1', 'Sheet1', '', ''],
+            'OutputColumn': ['Customer_Name', 'Status', 'Order_Date', 'Product_Category', 'Revenue'],
+            'InputColumn': ['Full Name', '', 'Date', 'Category', 'Total Amount'],
+            'StaticValue': ['', 'Active', '', '', ''],
+            'FilterValues': ['', '', '', 'Electronics,Books', ''],
+            'DateFormatFlag': [False, False, True, False, False],
+            'IncludeFlag': [True, True, True, True, True]
+        }
+        
+        # Create download buttons in two columns
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            basic_df = pd.DataFrame(sample_basic_data)
+            basic_csv = basic_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Basic Sample",
+                data=basic_csv,
+                file_name="sample_basic_mapping.csv",
+                mime="text/csv",
+                help="Download a basic mapping file template with required columns only"
+            )
+            st.caption("✅ Basic format with essential columns")
+        
+        with col2:
+            enhanced_df = pd.DataFrame(sample_enhanced_data)
+            enhanced_csv = enhanced_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Enhanced Sample",
+                data=enhanced_csv,
+                file_name="sample_enhanced_mapping.csv",
+                mime="text/csv",
+                help="Download an enhanced mapping file template with all optional features"
+            )
+            st.caption("🚀 Enhanced format with all features")

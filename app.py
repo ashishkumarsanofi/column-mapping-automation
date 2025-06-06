@@ -24,15 +24,15 @@ st.write("Streamlit version:", st.__version__)
 
 SANOFI_COLORS = {
     'primary': '#000000',
-    'secondary': '#7A0056',
-    'accent': '#4B0082',
+    'secondary': "#BB0083",
+    'accent': "#630BA2",
     'background': '#FFFFFF',
     'text': '#000000'
 }
 
 st.markdown("""
 <style>
-    .stButton>button {background-color: #7A0056; color: white; border-radius: 5px; padding: 0.5rem 1rem; border: none;}
+    .stButton>button {background-color: #BB0083; color: white; border-radius: 5px; padding: 0.5rem 1rem; border: none;}
     .stButton>button:hover {background-color: #4B0082;}
     .mapping-header {color: #7A0056; font-weight: bold; padding: 10px; background-color: #F8F9FA; border-left: 3px solid #7A0056;}
     .sample-column {background-color: #F8F9FA; padding: 10px; border-left: 3px solid #7A0056; margin: 5px 0;}
@@ -46,7 +46,7 @@ st.markdown("""
 
 st.markdown("Upload multiple input files and a sample file to map and consolidate your data with optional static values.")
 show_guide()
-    # Suggest converting Excel files to CSV for faster processing before uploading
+# Suggest converting Excel files to CSV for faster processing before uploading
 st.info("💡 Tip: Convert Excel files to CSV format for faster processing before uploading.")
 # --- Upload Section ---
 input_files, output_file, mapping_file = show_upload_section(SANOFI_COLORS)
