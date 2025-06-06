@@ -13,10 +13,6 @@
 - Python 3.7+ installed
 - Web browser (Chrome, Edge, Firefox)
 
-## 📞 Need Help?
-
-See `FINAL_SOLUTION_GUIDE.md` for detailed instructions and troubleshooting.
-
 ---
 
 **That's it! Just click START_MAPPING_TOOL.bat to begin!** 🎯

@@ -14,16 +14,16 @@ echo 🔧 Setting up environment...
 echo 📁 Upload limit: 1024MB
 echo.
 
-REM Check if we're in the right directory
-if not exist "..\app.py" (
+REM Check if application files exist
+echo 📂 Checking application files...
+if not exist "app.py" (
     echo ❌ Error: app.py not found!
-    echo Please make sure this file is in the Distribution Files folder
-    echo and that app.py exists in the parent directory.
+    echo Please make sure all application files are in this folder.
     pause
     exit /b 1
 )
 
-echo ✅ Found app.py
+echo ✅ Application files found
 echo 🚀 Starting Streamlit server...
 echo.
 echo 📝 Instructions:
@@ -34,8 +34,7 @@ echo.
 echo ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 echo.
 
-REM Change to parent directory and run the app
-cd /d "%~dp0.."
+REM Run the app from the distribution directory (with copied files)
 python -m streamlit run app.py
 
 echo.
