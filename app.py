@@ -79,6 +79,33 @@ st.markdown("""
     h3 {
         color: #3282B8 !important;
     }
+    
+    /* Darker and more subtle multiselect tags for sheet selection */
+    .stMultiSelect [data-baseweb="tag"] {
+        background-color: #34495E !important;
+        color: white !important;
+        border: 1px solid #2C3E50 !important;
+    }
+    .stMultiSelect [data-baseweb="tag"] span {
+        color: white !important;
+    }
+    .stMultiSelect [data-baseweb="tag"]:hover {
+        background-color: #2C3E50 !important;
+    }
+    /* Alternative darker brown option - comment out above and uncomment below if preferred */
+    /*
+    .stMultiSelect [data-baseweb="tag"] {
+        background-color: #8B4513 !important;
+        color: white !important;
+        border: 1px solid #654321 !important;
+    }
+    .stMultiSelect [data-baseweb="tag"] span {
+        color: white !important;
+    }
+    .stMultiSelect [data-baseweb="tag"]:hover {
+        background-color: #654321 !important;
+    }
+    */
 </style>
 """, unsafe_allow_html=True)
 
