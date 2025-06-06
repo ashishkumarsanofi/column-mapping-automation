@@ -1,5 +1,0 @@
-streamlit
-pandas
-openpyxl
-pyinstaller
-auto-py-to-exe
