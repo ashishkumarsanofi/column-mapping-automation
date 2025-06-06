@@ -48,12 +48,10 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
     """
     @st.cache_data(show_spinner=False, max_entries=20)
     def cached_read_file(file):
-        return read_file(file)
-
-    @st.cache_data(show_spinner=False, max_entries=20)
+        return read_file(file)    @st.cache_data(show_spinner=False, max_entries=20)
     def cached_read_excel(file, sheet_name, usecols):
-        # Optimize Excel reading: use openpyxl, only read necessary columns, avoid dtype conversion if not needed
-        return pd.read_excel(file, sheet_name=sheet_name, usecols=usecols, engine='openpyxl')
+        # Optimize Excel reading: use openpyxl, read as strings to prevent dtype issues
+        return pd.read_excel(file, sheet_name=sheet_name, usecols=usecols, engine='openpyxl', dtype=str)
 
     final_dataframes = []
     active_file_sheets = input_file_sheets
@@ -171,14 +169,11 @@ def process_mapping_tabs(input_file_sheets, output_file, mapping_file, mapping_f
                     base_name = '_'.join(base.split('_')[:-1])
                 else:
                     base_name = base
-                col_occurrences.setdefault(base_name, []).append(col)
-            # Add logging to verify col_occurrences and mapping logic
-            import logging
-            logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-            # Log col_occurrences after it is populated
-            logging.debug(f"col_occurrences: {col_occurrences}")            # Add detailed logging to debug mapping logic
-            logging.debug(f"Input columns (deduplicated): {input_columns}")
-            logging.debug(f"col_occurrences: {col_occurrences}")
+                col_occurrences.setdefault(base_name, []).append(col)            # Debug logging (commented out for production)
+            # import logging
+            # logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+            # logging.debug(f"col_occurrences: {col_occurrences}")
+            # logging.debug(f"Input columns (deduplicated): {input_columns}")
             
             # Removed automatic date formatting - user controls this with checkboxes
             column_mapping = {col: None for col in output_columns}
